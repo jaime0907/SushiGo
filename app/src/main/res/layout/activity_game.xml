@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/game_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#11510A"
+    tools:context=".GameActivity">
+
+    <ImageView
+        android:id="@+id/cartaRivalP3"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline10"
+        app:layout_constraintDimensionRatio="1.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline8"
+        app:srcCompat="@drawable/sushi_back_ccw" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cartasP3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintEnd_toStartOf="@+id/guideline9"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline6">
+
+        <ImageView
+            android:id="@+id/cartaRivalP3_1"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1.5"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineP3vert"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/sushi_back_ccw" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP3_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/cartaRivalP3_1"
+            app:layout_constraintDimensionRatio="1.5"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineP3vert"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/sushi_back_ccw" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP3_3"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/cartaRivalP3_2"
+            app:layout_constraintDimensionRatio="1.5"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineP3vert"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/sushi_back_ccw" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP3_4"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/cartaRivalP3_3"
+            app:layout_constraintDimensionRatio="1.5"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineP3vert"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/sushi_back_ccw" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP3_5"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1.5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/guidelineP3vert"
+            app:srcCompat="@drawable/sushi_back_ccw" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP3_6"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/cartaRivalP3_5"
+            app:layout_constraintDimensionRatio="1.5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/guidelineP3vert"
+            app:srcCompat="@drawable/sushi_back_ccw" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP3_7"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/cartaRivalP3_6"
+            app:layout_constraintDimensionRatio="1.5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/guidelineP3vert"
+            app:srcCompat="@drawable/sushi_back_ccw" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP3_8"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/cartaRivalP3_7"
+            app:layout_constraintDimensionRatio="1.5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/guidelineP3vert"
+            app:srcCompat="@drawable/sushi_back_ccw" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineP3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.5" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineP3vert"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cartasP2"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/guideline6"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/cartaRivalP2_"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP2_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP2_"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP2_3"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP2_2"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP2_4"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP2_3"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP2_5"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="1dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP2_4"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP2_6"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP2_5"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP2_7"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP2_6"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP2_8"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP2_7"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="1" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cartasP5"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="142dp">
+
+        <ImageView
+            android:id="@+id/cartaRivalP5_"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guidelineP5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP5_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guidelineP5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP5_"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP5_3"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guidelineP5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP5_2"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP5_4"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/guidelineP5"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP5_3"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP5_5"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/guidelineP5"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP5_6"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP5_5"
+            app:layout_constraintTop_toTopOf="@+id/guidelineP5"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP5_7"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP5_6"
+            app:layout_constraintTop_toTopOf="@+id/guidelineP5"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <ImageView
+            android:id="@+id/cartaRivalP5_8"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="0.666666666666666666"
+            app:layout_constraintStart_toEndOf="@+id/cartaRivalP5_7"
+            app:layout_constraintTop_toTopOf="@+id/guidelineP5"
+            app:srcCompat="@drawable/sushi_gyoza" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineP5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.5" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ImageView
+        android:id="@+id/baraja"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="0.66666666666666"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/sushi_back"
+        tools:layout_editor_absoluteX="329dp" />
+
+    <ImageView
+        android:id="@+id/cartaPlayer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="0.66666666666666"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline"
+        app:srcCompat="@drawable/sushi_nigiri2" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.75" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/errorLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#BE000000"
+        android:onClick="removeError"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/errorText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ERROR"
+            android:textColor="#FFFFFF"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/textPlayers"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="TextView"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="@+id/baraja"
+        app:layout_constraintStart_toEndOf="@+id/cartaPlayer"
+        app:layout_constraintTop_toTopOf="@+id/baraja" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.35" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.15" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline9"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.15" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintGuide_percent="0.4"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="addCardPlayer3"
+        android:text="Button"
+        app:layout_constraintBottom_toBottomOf="@+id/textPlayers"
+        app:layout_constraintStart_toEndOf="@+id/textPlayers" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="#8F0000"
+        app:cardCornerRadius="8dp"
+        app:contentPadding="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="jaime0907"
+            android:textColor="#FFFFFF" />
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
