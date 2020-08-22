@@ -51,8 +51,9 @@ public class GameActivity extends AppCompatActivity {
     String username = null;
     int sala = 0;
     int numPlayers = 0;
+    int numPlayer = 0;
 
-    ArrayList<Card> listaPlayer3 = new ArrayList<Card>();
+            ArrayList<Card> listaPlayer3 = new ArrayList<Card>();
 
     Handler handler = new Handler();
 
@@ -83,87 +84,26 @@ public class GameActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    public void buttonPress(View view){
-        if(idGame != null) {
-            final ImageView baraja = findViewById(R.id.baraja);
-            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-            String url = "http://82.158.149.91:3000/playercards";
-
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            try {
-                                JSONArray cartasPlayerJSON = new JSONArray(response);
-                                for(int i = 0; i < cartasPlayerJSON.length(); i++){
-                                    Card c1 = new Card((int)cartasPlayerJSON.get(i),null, true, false);
-                                    cartasPlayer.add(c1);
-                                    genCardImage(c1, baraja);
-                                }
-                                redrawAll();
-
-                            } catch (JSONException e) {
-                                showErrorMessage("Error en el JSON");
-                                e.printStackTrace();
-                            }
-                        }
-                    }, new Response.ErrorListener() {
-
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    showErrorMessage(error.toString());
-                }
-            }) {
-                @Override
-                protected Map<String, String> getParams() throws AuthFailureError {
-                    Map<String, String> params = new HashMap<String, String>();
-                    params.put("idgame", idGame);
-
-                    return params;
-                }
-            };
-
-            queue.add(stringRequest);
-        }
-    }
-
     public void startGame(){
         ImageView carta1 = findViewById(R.id.cartaPlayer);
         widthCard = carta1.getWidth();
         heightCard = carta1.getHeight();
         username = getIntent().getStringExtra("username");
-        SharedPreferences sp = getApplicationContext().getSharedPreferences("preferences", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putString("username", username);
-        editor.apply();
-
         sala = getIntent().getIntExtra("sala", 0);
+        idGame = getIntent().getStringExtra("idgame");
 
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
 
         StringRequest stringRequest = null;
-        String urlstart = url;
-        if(sala == 0){
-            urlstart += "/crearsala";
-        }else{
-            urlstart += "/unirsala";
-        }
-        stringRequest = new StringRequest(Request.Method.POST, urlstart,
+        stringRequest = new StringRequest(Request.Method.POST, url + "/initgame",
                 new Response.Listener<String>(){
                     @Override
                     public void onResponse(String response) {
                         try {
                             JSONObject datajson = new JSONObject(response);
-                            idGame = datajson.getString("idgame");
-                            sala = datajson.getInt("sala");
-                            if(sala == 0){
-                                showErrorMessage(datajson.getString("error"));
-                                //Devolver al menu principal?
-                                return;
-                            }
                             numPlayers = datajson.getInt("numplayers");
-                            //drawplayers
-                            recursiveWaitForStart();
+                            numPlayer = datajson.getInt("numplayer");
+                            drawPlayers(datajson.getJSONArray("arrayplayers"));
                         } catch (JSONException e) {
                             showErrorMessage("Error en el JSON, startGame()");
                             e.printStackTrace();
@@ -180,13 +120,35 @@ public class GameActivity extends AppCompatActivity {
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("username", username);
-                if(sala != 0){
-                    params.put("sala", String.valueOf(sala));
-                }
+                params.put("sala", String.valueOf(sala));
+                params.put("idgame", idGame);
                 return params;
             }
         };
         queue.add(stringRequest);
+    }
+
+    public void drawPlayers(JSONArray arrayPlayers) throws JSONException {
+        for(int i = 2; i <= 4; i++){
+            findViewById(getResources().getIdentifier("cardP" + i, "id", getPackageName())).setVisibility(View.INVISIBLE);
+        }
+        for(int i = 0; i < arrayPlayers.length(); i++){
+            JSONObject jsonPlayer = arrayPlayers.getJSONObject(i);
+            String username = jsonPlayer.getString("username");
+            int num = jsonPlayer.getInt("num");
+            if(num == numPlayer){
+                continue;
+            }
+            int playerP = (num - numPlayer + 1 + numPlayers) % numPlayers;
+            if(playerP == 0){
+                playerP = numPlayers;
+            }
+
+            Log.d("playerP: ", String.valueOf(playerP));
+            findViewById(getResources().getIdentifier("cardP" + playerP, "id", getPackageName())).setVisibility(View.VISIBLE);
+            TextView textView = findViewById(getResources().getIdentifier("usernameP" + playerP, "id", getPackageName()));
+            textView.setText(username);
+        }
     }
 
     public void recursiveWaitForStart(){
@@ -202,7 +164,6 @@ public class GameActivity extends AppCompatActivity {
                                 public void onResponse(String response) {
                                     try {
                                         JSONObject datajson = new JSONObject(response);
-                                        Log.d("JSON:", response);
                                         if (datajson.getInt("numplayers") != numPlayers) {
                                             TextView textPlayers = findViewById(R.id.textPlayers);
                                             JSONArray playersJSON = new JSONArray(datajson.getString("arrayplayers"));
@@ -379,7 +340,7 @@ public class GameActivity extends AppCompatActivity {
             }
 
             if(card.isFlip()){
-                newCardImage.setImageResource(R.drawable.sushi_back_ccw);
+                newCardImage.setImageResource(R.drawable.sushi_back_270);
             }else{
                 newCardImage.setImageResource(card.getImageId());
             }

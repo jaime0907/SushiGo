@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void crearSala(View view){
         EditText usernameBox =  findViewById(R.id.usernameBox);
-        Intent intent = new Intent(this, GameActivity.class);
+        Intent intent = new Intent(this, SalaEsperaActivity.class);
         intent.putExtra("username", usernameBox.getText().toString());
         startActivity(intent);
     }
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
     public void unirseASala(View view){
         EditText usernameBox =  findViewById(R.id.usernameBox);
         EditText salaBox =  findViewById(R.id.salaBox);
-        Intent intent = new Intent(this, GameActivity.class);
+        Intent intent = new Intent(this, SalaEsperaActivity.class);
         intent.putExtra("username", usernameBox.getText().toString());
         intent.putExtra("sala", Integer.parseInt(salaBox.getText().toString()));
         startActivity(intent);
