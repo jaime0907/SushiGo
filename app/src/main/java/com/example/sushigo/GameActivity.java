@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
@@ -141,7 +142,7 @@ public class GameActivity extends AppCompatActivity {
                                     mapManos.get(player).add(c1);
                                 }
                             }
-                            moveManos();
+                            moveManos(true);
 
                         } catch (JSONException e) {
                             showErrorMessage("Error en el JSON, startGame()");
@@ -191,7 +192,11 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void drawPlayerCards(){
-
+        ImageView playerTemplate = findViewById(R.id.manoS);
+        ArrayList<Card> listCards = mapManos.get(1);
+        for(int i = 0; i < listCards.size(); i++){
+            moveMano(listCards.get(i), playerTemplate, "S", "S", i, listCards.size());
+        }
     }
 
     public ArrayList<Card> JSONCardsToList(JSONArray jsonarray) throws JSONException {
@@ -399,7 +404,7 @@ public class GameActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                moveManos();
+                moveManos(false);
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -413,20 +418,61 @@ public class GameActivity extends AppCompatActivity {
 
     }
 
-    public void moveManos(){
+    public void moveManos(boolean isReparto){
         for(int player = 1; player <= numPlayers; player++) {
-            Log.d("Player", String.valueOf(player));
-            Log.d("Pos", mapPos.get(numPlayers).get(player));
+            ArrayList<Card> listCards = mapManos.get(player);
             int prevPlayer = player - 1;
             if(player == 1){
                 prevPlayer = numPlayers;
             }
             ImageView dest = findViewById(getResources().getIdentifier("mano" + mapPos.get(numPlayers).get(player), "id", getPackageName()));
-            for (int i = 0; i < 10; i++) {
-                Card card = mapManos.get(player).get(i);
-                moveMano(card, dest, mapPos.get(numPlayers).get(prevPlayer), mapPos.get(numPlayers).get(player), i, 10);
+            for (int i = 0; i < listCards.size(); i++) {
+                Card card = listCards.get(i);
+                String posOri = mapPos.get(numPlayers).get(prevPlayer);
+                if(isReparto){
+                    posOri = "S";
+                }
+                moveMano(card, dest, posOri, mapPos.get(numPlayers).get(player), i, listCards.size());
             }
         }
+    }
+
+    public float scaleCard(String posOri, String posDest){
+        switch(posOri){
+            case "S":
+                if(posDest.equals("N")){
+                    return 5f/3f; //1.666
+                }else if(posDest.equals("S")){
+                    return 1f;
+                }else{
+                    return 2.5f;
+                }
+            case "N":
+                if(posDest.equals("E")){
+                    return 1.5f;
+                }else{
+                    return 0.6f;
+                }
+            case "W":
+                return 1f;
+            case "E":
+                return 0.6f;
+        }
+        return 1f;
+    }
+
+    public int rotateCard(String posOri){
+        switch(posOri){
+            case "S":
+                return 0;
+            case "N":
+                return 180;
+            case "W":
+                return -90;
+            case "E":
+                return 90;
+        }
+        return 0;
     }
 
     public void moveMano(Card cardOrigen, ImageView destino, String posOri, String posDest, int ncard, int totalcards){
@@ -440,27 +486,9 @@ public class GameActivity extends AppCompatActivity {
 
         newCardImage.setId(View.generateViewId());
 
-        switch(posOri){
-            case "S":
-                newCardImage.setScaleX(2.5f);
-                newCardImage.setScaleY(2.5f);
-                break;
-            case "N":
-                newCardImage.setScaleX(1.5f);
-                newCardImage.setScaleY(1.5f);
-                newCardImage.setRotation(180);
-                break;
-            case "W":
-                newCardImage.setScaleX(1f);
-                newCardImage.setScaleY(1f);
-                newCardImage.setRotation(-90);
-                break;
-            case "E":
-                newCardImage.setScaleX(0.6f);
-                newCardImage.setScaleY(0.6f);
-                newCardImage.setRotation(90);
-                break;
-        }
+        newCardImage.setScaleX(scaleCard(posOri, posDest));
+        newCardImage.setScaleY(scaleCard(posOri, posDest));
+        newCardImage.setRotation(rotateCard(posOri));
         float rotacion = 0;
         float escala = 1;
 
@@ -469,8 +497,18 @@ public class GameActivity extends AppCompatActivity {
         switch(posDest){
             case "S":
                 rotacion = 0;
-                escala = 1f;
+                if(cardOrigen.isSelected()){
+                    escala = 1.2f;
+                }else{
+                    escala = 1f;
+                }
                 x = destino.getWidth()*(ncard-((totalcards-1)/2f));
+                newCardImage.setOnClickListener(new View.OnClickListener(){
+                    @Override
+                    public void onClick(View v) {
+                        selectCard(v);
+                    }
+                });
                 break;
             case "N":
                 rotacion = -180;
@@ -557,4 +595,48 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
+    public void selectCard(View view){
+        float escala = 1.5f;
+        Card selCard = null;
+        for(Card card : mapManos.get(1)){
+            if(card.getImagen() == view){
+                selCard = card;
+                break;
+            }
+        }
+
+        if(selCard != null){
+            for(Card card : mapManos.get(1)){ //excepto en caso de palillos, hacer en el futuro
+                if(card == selCard){
+                    if(!card.isSelected()) {
+                        selCard.setSelected(true);
+                        ImageView oldImage = selCard.getImagen();
+                        genCardImage(selCard, oldImage);
+                        selCard.getImagen().setOnClickListener(new View.OnClickListener(){
+                            @Override
+                            public void onClick(View v) {
+                                selectCard(v);
+                            }
+                        });
+                        ((ConstraintLayout)findViewById(R.id.game_layout)).removeView(oldImage);
+
+                        ObjectAnimator animScaleX = ObjectAnimator.ofFloat(selCard.getImagen(), "scaleX", escala);
+                        ObjectAnimator animScaleY = ObjectAnimator.ofFloat(selCard.getImagen(), "scaleY", escala);
+                        AnimatorSet animSetXY = new AnimatorSet();
+                        animSetXY.playTogether(animScaleX, animScaleY);
+                        animSetXY.setDuration(duration/4);
+                        animSetXY.start();
+                    }
+                }else if(card.isSelected()){
+                    card.setSelected(false);
+                    ObjectAnimator animScaleX = ObjectAnimator.ofFloat(card.getImagen(), "scaleX", 1f);
+                    ObjectAnimator animScaleY = ObjectAnimator.ofFloat(card.getImagen(), "scaleY", 1f);
+                    AnimatorSet animSetXY = new AnimatorSet();
+                    animSetXY.playTogether(animScaleX, animScaleY);
+                    animSetXY.setDuration(duration/4);
+                    animSetXY.start();
+                }
+            }
+        }
+    }
 }
