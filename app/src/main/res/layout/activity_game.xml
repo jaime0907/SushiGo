@@ -24,7 +24,7 @@
         android:id="@+id/cartaRivalP1"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/manoP1"
+        app:layout_constraintBottom_toTopOf="@+id/manoS"
         app:layout_constraintDimensionRatio="0.666666666666666666"
         app:layout_constraintEnd_toEndOf="parent"
 
@@ -53,7 +53,7 @@
         app:srcCompat="@drawable/sushi_back_270" />
 
     <ImageView
-        android:id="@+id/manoP4"
+        android:id="@+id/manoE"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/guideline10"
@@ -63,7 +63,7 @@
         app:srcCompat="@drawable/sushi_back_270" />
 
     <ImageView
-        android:id="@+id/manoP3"
+        android:id="@+id/manoW"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/guideline10"
@@ -73,7 +73,7 @@
         app:srcCompat="@drawable/sushi_back_270" />
 
     <ImageView
-        android:id="@+id/manoP2"
+        android:id="@+id/manoN"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/guideline11"
@@ -82,6 +82,31 @@
 
         app:layout_constraintStart_toStartOf="@+id/cartaRivalP2"
         app:srcCompat="@drawable/sushi_gyoza" />
+
+    <ImageView
+        android:id="@+id/manoS"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="0.66666666666666"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline"
+        app:srcCompat="@drawable/sushi_nigiri2" />
+
+    <ImageView
+        android:id="@+id/baraja"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/guideline2"
+        app:layout_constraintDimensionRatio="0.66666666666666"
+        app:layout_constraintEnd_toEndOf="@+id/manoS"
+        app:layout_constraintStart_toStartOf="@+id/manoS"
+        app:layout_constraintTop_toTopOf="@+id/guideline6"
+        app:layout_constraintVertical_bias="0.5"
+        app:srcCompat="@drawable/sushi_palillos" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cartasP3"
@@ -391,18 +416,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <ImageView
-        android:id="@+id/manoP1"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintDimensionRatio="0.66666666666666"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guideline"
-        app:srcCompat="@drawable/sushi_nigiri2" />
-
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
         android:layout_width="wrap_content"
@@ -442,7 +455,7 @@
         android:textColor="#FFFFFF"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/manoP1"
+        app:layout_constraintStart_toEndOf="@+id/manoS"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.Guideline
@@ -469,18 +482,18 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/cardP4"
+        android:id="@+id/cardE"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="8dp"
         app:cardBackgroundColor="#8F0000"
         app:cardCornerRadius="8dp"
         app:contentPadding="4dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline2">
 
         <TextView
-            android:id="@+id/usernameP4"
+            android:id="@+id/usernameE"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="player4"
@@ -488,18 +501,18 @@
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/cardP3"
+        android:id="@+id/cardW"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         app:cardBackgroundColor="#8F0000"
         app:cardCornerRadius="8dp"
         app:contentPadding="4dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline2">
 
         <TextView
-            android:id="@+id/usernameP3"
+            android:id="@+id/usernameW"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="player3"
@@ -507,7 +520,7 @@
     </androidx.cardview.widget.CardView>
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/cardP2"
+        android:id="@+id/cardN"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -519,7 +532,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/usernameP2"
+            android:id="@+id/usernameN"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="player2"
@@ -538,7 +551,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="addCardPlayer3"
-        android:text="Button"
+        android:text="Add P3 card"
         app:layout_constraintBottom_toBottomOf="@+id/textPlayers"
         app:layout_constraintStart_toEndOf="@+id/textPlayers" />
 
@@ -575,5 +588,15 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.05"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="buttonMoveCards"
+        android:text="moveCards"
+        app:layout_constraintEnd_toEndOf="@+id/button"
+        app:layout_constraintStart_toStartOf="@+id/button"
+        app:layout_constraintTop_toBottomOf="@+id/button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

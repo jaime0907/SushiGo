@@ -46,6 +46,8 @@ public class GameActivity extends AppCompatActivity {
 
     ArrayList<Card> listPlayerCards = new ArrayList<>();
 
+    HashMap<Integer, ArrayList<Card>> mapManos = new HashMap<>();
+
     ArrayList<Card> listaPlayer3 = new ArrayList<Card>();
 
     Handler handler = new Handler();
@@ -54,7 +56,8 @@ public class GameActivity extends AppCompatActivity {
 
     ArrayList<Card> cartasPlayer = new ArrayList<>();
 
-    int PDebug = 1;
+    HashMap<Integer, HashMap<Integer, String>> mapPos = new HashMap<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +65,35 @@ public class GameActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_game);
 
+        HashMap<Integer, String> mapPos2 = new HashMap<Integer, String>();
+        mapPos2.put(1, "S");
+        mapPos2.put(2, "N");
+
+        HashMap<Integer, String> mapPos3 = new HashMap<Integer, String>();
+        mapPos3.put(1, "S");
+        mapPos3.put(2, "W");
+        mapPos3.put(3, "E");
+
+        HashMap<Integer, String> mapPos4 = new HashMap<Integer, String>();
+        mapPos4.put(1, "S");
+        mapPos4.put(2, "W");
+        mapPos4.put(3, "N");
+        mapPos4.put(4, "E");
+
+        //Falta 5 players, con N1 y N2.
+
+        mapPos.put(2, mapPos2);
+        mapPos.put(3, mapPos3);
+        mapPos.put(4, mapPos4);
+
+        mapManos.put(1, new ArrayList<Card>());
+        mapManos.put(2, new ArrayList<Card>());
+        mapManos.put(3, new ArrayList<Card>());
+        mapManos.put(4, new ArrayList<Card>());
+        mapManos.put(5, new ArrayList<Card>());
+
         activityRunning = true;
+
 
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -80,7 +111,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void startGame(){
-        ImageView carta1 = findViewById(R.id.manoP1);
+        ImageView carta1 = findViewById(R.id.manoS);
         widthCard = carta1.getWidth();
         heightCard = carta1.getHeight();
         username = getIntent().getStringExtra("username");
@@ -101,6 +132,17 @@ public class GameActivity extends AppCompatActivity {
                             drawPlayers(datajson.getJSONArray("arrayplayers"));
                             listPlayerCards = JSONCardsToList(datajson.getJSONArray("cartas"));
                             drawPlayerCards();
+
+                            ImageView baraja = findViewById(R.id.baraja);
+                            for(int player = 1; player <= numPlayers; player++){
+                                for(int i = 0; i < 10; i++){
+                                    Card c1 = new Card((int)(Math.floor(Math.random()*108 + 1)), null, player != 1, false);
+                                    genCardImage(c1, baraja);
+                                    mapManos.get(player).add(c1);
+                                }
+                            }
+                            moveManos();
+
                         } catch (JSONException e) {
                             showErrorMessage("Error en el JSON, startGame()");
                             e.printStackTrace();
@@ -126,9 +168,11 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void drawPlayers(JSONArray arrayPlayers) throws JSONException {
-        for(int i = 2; i <= 4; i++){
-            findViewById(getResources().getIdentifier("cardP" + i, "id", getPackageName())).setVisibility(View.INVISIBLE);
-        }
+
+        findViewById(getResources().getIdentifier("cardN", "id", getPackageName())).setVisibility(View.INVISIBLE);
+        findViewById(getResources().getIdentifier("cardW", "id", getPackageName())).setVisibility(View.INVISIBLE);
+        findViewById(getResources().getIdentifier("cardE", "id", getPackageName())).setVisibility(View.INVISIBLE);
+        //Añadir N1 y N2 cuando toque
         for(int i = 0; i < arrayPlayers.length(); i++){
             JSONObject jsonPlayer = arrayPlayers.getJSONObject(i);
             String username = jsonPlayer.getString("username");
@@ -136,12 +180,12 @@ public class GameActivity extends AppCompatActivity {
             if(num == numPlayer){
                 continue;
             }
-            int playerP = (num - numPlayer + 1 + numPlayers) % numPlayers;
-            if(playerP == 0){
-                playerP = numPlayers;
+            int playerRelativeNum = (num - numPlayer + 1 + numPlayers) % numPlayers;
+            if(playerRelativeNum == 0){
+                playerRelativeNum = numPlayers;
             }
-            findViewById(getResources().getIdentifier("cardP" + playerP, "id", getPackageName())).setVisibility(View.VISIBLE);
-            TextView textView = findViewById(getResources().getIdentifier("usernameP" + playerP, "id", getPackageName()));
+            findViewById(getResources().getIdentifier("card" + mapPos.get(numPlayers).get(playerRelativeNum), "id", getPackageName())).setVisibility(View.VISIBLE);
+            TextView textView = findViewById(getResources().getIdentifier("username" + mapPos.get(numPlayers).get(playerRelativeNum), "id", getPackageName()));
             textView.setText(username);
         }
     }
@@ -226,7 +270,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void redrawAll(){
-        ImageView playerTemplate = findViewById(R.id.manoP1);
+        ImageView playerTemplate = findViewById(R.id.manoS);
         Card c = null;
         int x = 0;
         for(int i = 0; i < cartasPlayer.size(); i++){
@@ -288,28 +332,42 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    public void flipCard(Card card, int duration){
+    public void flipCard(Card card, final int duration){
         final Card cardCopy = card;
         int startRot = 0;
-        int endRot = -180;
+        int endRot = -90;
 
         if(card.isFlip()){
-            startRot = -180;
-            endRot = 0;
+            startRot = 0;
+            endRot = 90;
         }
 
         ObjectAnimator anim = ObjectAnimator.ofFloat(card.getImagen(), "rotationY", startRot, endRot);
-        anim.setDuration(duration);
+        anim.setDuration(duration/2);
         anim.start();
         card.getImagen().postDelayed(new Runnable(){
             @Override
             public void run() {
+
+                int startRot = 90;
+                int endRot = 0;
+
+                if(cardCopy.isFlip()){
+                    startRot = -90;
+                    endRot = 0;
+                }
+
                 if(cardCopy.isFlip()){
                     cardCopy.getImagen().setImageResource(cardCopy.getImageId());
                 }else{
-                    cardCopy.getImagen().setImageResource(R.drawable.sushi_back); //Cambiar esto cuando tengas todas las imagenes de cartas
+                    cardCopy.getImagen().setImageResource(R.drawable.sushi_back);
                 }
                 cardCopy.setFlip(!cardCopy.isFlip());
+
+
+                ObjectAnimator anim = ObjectAnimator.ofFloat(cardCopy.getImagen(), "rotationY", startRot, endRot);
+                anim.setDuration(duration/2);
+                anim.start();
 
             }
         }, duration/2);
@@ -319,45 +377,85 @@ public class GameActivity extends AppCompatActivity {
     public void addCardPlayer3(View view){
         listaPlayer3.add(new Card(1, null, true, false));
         drawPlayer3(listaPlayer3);
-
-        ImageView ori = findViewById(getResources().getIdentifier("manoP" + PDebug, "id", getPackageName()));
-
-        int sigPlayer = 1;
-        switch(PDebug){
-            case 1: sigPlayer = 3;break;
-            case 2: sigPlayer = 4;break;
-            case 3: sigPlayer = 2;break;
-            case 4: sigPlayer = 1;break;
-        }
-        ImageView dest = findViewById(getResources().getIdentifier("manoP" + sigPlayer, "id", getPackageName()));
-        Log.d("FROM/TO: ", String.valueOf(PDebug) + "/" + String.valueOf(sigPlayer));
-        moveMano(ori, dest, PDebug, sigPlayer);
-        PDebug = sigPlayer;
     }
 
-    public void moveMano(ImageView origen, ImageView destino, int Pori, int Pdest){
+    public void buttonMoveCards(View view){
 
+        for (int i = 0; i < 10; i++) {
+            flipCard(mapManos.get(1).get(i), duration/2);
+        }
+
+        ArrayList<Card> aux;
+        aux = (ArrayList<Card>) mapManos.get(1).clone();
+        for(int player = numPlayers; player >= 2; player--){
+            int nextPlayer = player + 1;
+            if(player == numPlayers){
+                nextPlayer = 1;
+            }
+            mapManos.put(nextPlayer, (ArrayList<Card>) mapManos.get(player).clone());
+        }
+        mapManos.put(2, (ArrayList<Card>) aux.clone());
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                moveManos();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < 10; i++) {
+                            flipCard(mapManos.get(1).get(i), duration / 2);
+                        }
+                    }
+                }, duration);
+            }
+        }, duration/2);
+
+    }
+
+    public void moveManos(){
+        for(int player = 1; player <= numPlayers; player++) {
+            Log.d("Player", String.valueOf(player));
+            Log.d("Pos", mapPos.get(numPlayers).get(player));
+            int prevPlayer = player - 1;
+            if(player == 1){
+                prevPlayer = numPlayers;
+            }
+            ImageView dest = findViewById(getResources().getIdentifier("mano" + mapPos.get(numPlayers).get(player), "id", getPackageName()));
+            for (int i = 0; i < 10; i++) {
+                Card card = mapManos.get(player).get(i);
+                moveMano(card, dest, mapPos.get(numPlayers).get(prevPlayer), mapPos.get(numPlayers).get(player), i, 10);
+            }
+        }
+    }
+
+    public void moveMano(Card cardOrigen, ImageView destino, String posOri, String posDest, int ncard, int totalcards){
+        ImageView origen = cardOrigen.getImagen();
         ImageView newCardImage = new ImageView(getApplicationContext());
-        newCardImage.setImageResource(R.drawable.sushi_maki3);
+        if(cardOrigen.isFlip()){
+            newCardImage.setImageResource(R.drawable.sushi_back);
+        }else{
+            newCardImage.setImageResource(cardOrigen.getImageId());
+        }
 
         newCardImage.setId(View.generateViewId());
 
-        switch(Pori){
-            case 1:
+        switch(posOri){
+            case "S":
                 newCardImage.setScaleX(2.5f);
                 newCardImage.setScaleY(2.5f);
                 break;
-            case 2:
+            case "N":
                 newCardImage.setScaleX(1.5f);
                 newCardImage.setScaleY(1.5f);
                 newCardImage.setRotation(180);
                 break;
-            case 3:
+            case "W":
                 newCardImage.setScaleX(1f);
                 newCardImage.setScaleY(1f);
                 newCardImage.setRotation(-90);
                 break;
-            case 4:
+            case "E":
                 newCardImage.setScaleX(0.6f);
                 newCardImage.setScaleY(0.6f);
                 newCardImage.setRotation(90);
@@ -366,22 +464,28 @@ public class GameActivity extends AppCompatActivity {
         float rotacion = 0;
         float escala = 1;
 
-        switch(Pdest){
-            case 1:
+        float x = 0;
+        float y = 0;
+        switch(posDest){
+            case "S":
                 rotacion = 0;
                 escala = 1f;
+                x = destino.getWidth()*(ncard-((totalcards-1)/2f));
                 break;
-            case 2:
+            case "N":
                 rotacion = -180;
                 escala = 1f;
+                x = destino.getWidth()*(ncard-((totalcards-1)/2f))*0.1f;
                 break;
-            case 3:
+            case "W":
                 rotacion = -90;
                 escala = 1.5f;
+                y = destino.getHeight()*(ncard-((totalcards-1)/2f))*0.1f;
                 break;
-            case 4:
+            case "E":
                 rotacion = 90;
                 escala = 1.5f;
+                y = destino.getHeight()*(ncard-((totalcards-1)/2f))*0.1f;
                 break;
         }
 
@@ -391,9 +495,13 @@ public class GameActivity extends AppCompatActivity {
         newCardImage.setX(origen.getX() + origen.getWidth()/2f - destino.getWidth()/2f);
         newCardImage.setY(origen.getY() + origen.getHeight()/2f - destino.getHeight()/2f);
 
+        ConstraintLayout layout = findViewById(R.id.game_layout);
+        layout.removeView(origen);
+        cardOrigen.setImagen(newCardImage);
+
         ((ConstraintLayout)findViewById(R.id.game_layout)).addView(newCardImage);
-        ObjectAnimator animX = ObjectAnimator.ofFloat(newCardImage, "x", destino.getX());
-        ObjectAnimator animY = ObjectAnimator.ofFloat(newCardImage, "y", destino.getY());
+        ObjectAnimator animX = ObjectAnimator.ofFloat(newCardImage, "x", destino.getX() + x);
+        ObjectAnimator animY = ObjectAnimator.ofFloat(newCardImage, "y", destino.getY() + y);
         ObjectAnimator animRot = ObjectAnimator.ofFloat(newCardImage, "rotation", rotacion);
         ObjectAnimator animScaleX = ObjectAnimator.ofFloat(newCardImage, "scaleX", escala);
         ObjectAnimator animScaleY = ObjectAnimator.ofFloat(newCardImage, "scaleY", escala);
