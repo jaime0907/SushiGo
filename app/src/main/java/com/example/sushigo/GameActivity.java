@@ -5,12 +5,10 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -20,7 +18,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -28,15 +25,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 public class GameActivity extends AppCompatActivity {
 
@@ -53,13 +44,17 @@ public class GameActivity extends AppCompatActivity {
     int numPlayers = 0;
     int numPlayer = 0;
 
-            ArrayList<Card> listaPlayer3 = new ArrayList<Card>();
+    ArrayList<Card> listPlayerCards = new ArrayList<>();
+
+    ArrayList<Card> listaPlayer3 = new ArrayList<Card>();
 
     Handler handler = new Handler();
 
     String url = "http://82.158.149.91:3000";
 
     ArrayList<Card> cartasPlayer = new ArrayList<>();
+
+    int PDebug = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +80,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void startGame(){
-        ImageView carta1 = findViewById(R.id.cartaPlayer);
+        ImageView carta1 = findViewById(R.id.manoP1);
         widthCard = carta1.getWidth();
         heightCard = carta1.getHeight();
         username = getIntent().getStringExtra("username");
@@ -104,6 +99,8 @@ public class GameActivity extends AppCompatActivity {
                             numPlayers = datajson.getInt("numplayers");
                             numPlayer = datajson.getInt("numplayer");
                             drawPlayers(datajson.getJSONArray("arrayplayers"));
+                            listPlayerCards = JSONCardsToList(datajson.getJSONArray("cartas"));
+                            drawPlayerCards();
                         } catch (JSONException e) {
                             showErrorMessage("Error en el JSON, startGame()");
                             e.printStackTrace();
@@ -143,12 +140,23 @@ public class GameActivity extends AppCompatActivity {
             if(playerP == 0){
                 playerP = numPlayers;
             }
-
-            Log.d("playerP: ", String.valueOf(playerP));
             findViewById(getResources().getIdentifier("cardP" + playerP, "id", getPackageName())).setVisibility(View.VISIBLE);
             TextView textView = findViewById(getResources().getIdentifier("usernameP" + playerP, "id", getPackageName()));
             textView.setText(username);
         }
+    }
+
+    public void drawPlayerCards(){
+
+    }
+
+    public ArrayList<Card> JSONCardsToList(JSONArray jsonarray) throws JSONException {
+        ArrayList<Card> listCard = new ArrayList<>();
+        for(int i = 0; i < jsonarray.length(); i++){
+            int idcard = jsonarray.getInt(i);
+            listCard.add(new Card(idcard, null, false, false));
+        }
+        return listCard;
     }
 
     public void recursiveWaitForStart(){
@@ -218,7 +226,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void redrawAll(){
-        ImageView playerTemplate = findViewById(R.id.cartaPlayer);
+        ImageView playerTemplate = findViewById(R.id.manoP1);
         Card c = null;
         int x = 0;
         for(int i = 0; i < cartasPlayer.size(); i++){
@@ -311,6 +319,89 @@ public class GameActivity extends AppCompatActivity {
     public void addCardPlayer3(View view){
         listaPlayer3.add(new Card(1, null, true, false));
         drawPlayer3(listaPlayer3);
+
+        ImageView ori = findViewById(getResources().getIdentifier("manoP" + PDebug, "id", getPackageName()));
+
+        int sigPlayer = 1;
+        switch(PDebug){
+            case 1: sigPlayer = 3;break;
+            case 2: sigPlayer = 4;break;
+            case 3: sigPlayer = 2;break;
+            case 4: sigPlayer = 1;break;
+        }
+        ImageView dest = findViewById(getResources().getIdentifier("manoP" + sigPlayer, "id", getPackageName()));
+        Log.d("FROM/TO: ", String.valueOf(PDebug) + "/" + String.valueOf(sigPlayer));
+        moveMano(ori, dest, PDebug, sigPlayer);
+        PDebug = sigPlayer;
+    }
+
+    public void moveMano(ImageView origen, ImageView destino, int Pori, int Pdest){
+
+        ImageView newCardImage = new ImageView(getApplicationContext());
+        newCardImage.setImageResource(R.drawable.sushi_maki3);
+
+        newCardImage.setId(View.generateViewId());
+
+        switch(Pori){
+            case 1:
+                newCardImage.setScaleX(2.5f);
+                newCardImage.setScaleY(2.5f);
+                break;
+            case 2:
+                newCardImage.setScaleX(1.5f);
+                newCardImage.setScaleY(1.5f);
+                newCardImage.setRotation(180);
+                break;
+            case 3:
+                newCardImage.setScaleX(1f);
+                newCardImage.setScaleY(1f);
+                newCardImage.setRotation(-90);
+                break;
+            case 4:
+                newCardImage.setScaleX(0.6f);
+                newCardImage.setScaleY(0.6f);
+                newCardImage.setRotation(90);
+                break;
+        }
+        float rotacion = 0;
+        float escala = 1;
+
+        switch(Pdest){
+            case 1:
+                rotacion = 0;
+                escala = 1f;
+                break;
+            case 2:
+                rotacion = -180;
+                escala = 1f;
+                break;
+            case 3:
+                rotacion = -90;
+                escala = 1.5f;
+                break;
+            case 4:
+                rotacion = 90;
+                escala = 1.5f;
+                break;
+        }
+
+
+        ConstraintLayout.LayoutParams lp = new ConstraintLayout.LayoutParams(destino.getWidth(),destino.getHeight());
+        newCardImage.setLayoutParams(lp);
+        newCardImage.setX(origen.getX() + origen.getWidth()/2f - destino.getWidth()/2f);
+        newCardImage.setY(origen.getY() + origen.getHeight()/2f - destino.getHeight()/2f);
+
+        ((ConstraintLayout)findViewById(R.id.game_layout)).addView(newCardImage);
+        ObjectAnimator animX = ObjectAnimator.ofFloat(newCardImage, "x", destino.getX());
+        ObjectAnimator animY = ObjectAnimator.ofFloat(newCardImage, "y", destino.getY());
+        ObjectAnimator animRot = ObjectAnimator.ofFloat(newCardImage, "rotation", rotacion);
+        ObjectAnimator animScaleX = ObjectAnimator.ofFloat(newCardImage, "scaleX", escala);
+        ObjectAnimator animScaleY = ObjectAnimator.ofFloat(newCardImage, "scaleY", escala);
+        AnimatorSet animSetXY = new AnimatorSet();
+
+        animSetXY.playTogether(animX, animY, animRot, animScaleX, animScaleY);
+        animSetXY.setDuration(duration);
+        animSetXY.start();
     }
 
     public void drawPlayer3(ArrayList<Card> listaCards){
