@@ -87,7 +87,7 @@
         android:id="@+id/manoS"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="visible"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="0.66666666666666"
         app:layout_constraintEnd_toEndOf="parent"
@@ -572,6 +572,7 @@
         android:id="@+id/layoutButtons"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:clipToPadding="false"
         android:orientation="horizontal"
         android:padding="16dp"
         app:layout_constraintBottom_toTopOf="@+id/guideline13"
@@ -585,7 +586,9 @@
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
             android:layout_weight="1"
-            android:onClick="newButton">
+            android:visibility="invisible"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="8dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -637,5 +640,54 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.53" />
+
+    <ProgressBar
+        android:id="@+id/timerS"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminate="false"
+        android:max="30"
+        android:progress="30"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/guideline12"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/timerW"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:max="30"
+        android:progress="30"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="@+id/cardW"
+        app:layout_constraintStart_toStartOf="@+id/cardW"
+        app:layout_constraintTop_toBottomOf="@+id/cardW" />
+
+    <ProgressBar
+        android:id="@+id/timerE"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:max="30"
+        android:progress="30"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="@+id/cardE"
+        app:layout_constraintStart_toStartOf="@+id/cardE"
+        app:layout_constraintTop_toBottomOf="@+id/cardE" />
+
+    <ProgressBar
+        android:id="@+id/timerN"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:max="30"
+        android:progress="30"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="@+id/cardN"
+        app:layout_constraintStart_toStartOf="@+id/cardN"
+        app:layout_constraintTop_toBottomOf="@+id/cardN" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -176,6 +176,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
                             Map<String, String> params = new HashMap<String, String>();
                             params.put("username", username);
                             params.put("sala", String.valueOf(sala));
+                            params.put("idgame", idGame);
                             return params;
                         }
                     };

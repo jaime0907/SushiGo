@@ -6,16 +6,17 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
@@ -64,6 +65,11 @@ public class GameActivity extends AppCompatActivity {
     HashMap<Integer, HashMap<Integer, String>> mapPos = new HashMap<>();
 
     boolean hayPalillos = false;
+    boolean hasAlreadyPlayed = false;
+
+    int countdownDuration = 30;
+
+    HashMap<String, CountDownTimer> mapTimer = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +104,59 @@ public class GameActivity extends AppCompatActivity {
         mapManos.put(4, new ArrayList<Card>());
         mapManos.put(5, new ArrayList<Card>());
 
+        mapTimer.put("N", new CountDownTimer(countdownDuration*1000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                ProgressBar pb = findViewById(R.id.timerN);
+                pb.setProgress(pb.getProgress() - 1);
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        });
+        mapTimer.put("S", new CountDownTimer(countdownDuration*1000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                ProgressBar pb = findViewById(R.id.timerS);
+                pb.setProgress(pb.getProgress() - 1);
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        });
+        mapTimer.put("E", new CountDownTimer(countdownDuration*1000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                ProgressBar pb = findViewById(R.id.timerE);
+                pb.setProgress(pb.getProgress() - 1);
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        });
+        mapTimer.put("W", new CountDownTimer(countdownDuration*1000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                ProgressBar pb = findViewById(R.id.timerW);
+                pb.setProgress(pb.getProgress() - 1);
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        });
+
         activityRunning = true;
 
 
@@ -123,6 +182,7 @@ public class GameActivity extends AppCompatActivity {
         username = getIntent().getStringExtra("username");
         sala = getIntent().getIntExtra("sala", 0);
         idGame = getIntent().getStringExtra("idgame");
+        ((ProgressBar)findViewById(R.id.timerS)).setMax(countdownDuration);
 
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
 
@@ -136,18 +196,25 @@ public class GameActivity extends AppCompatActivity {
                             numPlayers = datajson.getInt("numplayers");
                             numPlayer = datajson.getInt("numplayer");
                             drawPlayers(datajson.getJSONArray("arrayplayers"));
-                            listPlayerCards = JSONCardsToList(datajson.getJSONArray("cartas"));
-                            drawPlayerCards();
+                            mapManos.put(1,JSONCardsToList(datajson.getJSONArray("cartas")));
 
                             ImageView baraja = findViewById(R.id.baraja);
                             for(int player = 1; player <= numPlayers; player++){
-                                for(int i = 0; i < 10; i++){
-                                    Card c1 = new Card((int)(Math.floor(Math.random()*108 + 1)), null, player != 1, false);
-                                    genCardImage(c1, baraja);
-                                    mapManos.get(player).add(c1);
+                                for(int i = 0; i < mapManos.get(1).size(); i++){
+                                    if(player != 1){
+                                        Card c1 = new Card((int)(Math.floor(Math.random()*108 + 1)), null, player != 1, false);
+                                        genCardImage(c1, baraja);
+                                        mapManos.get(player).add(c1);
+                                    }else{
+                                        genCardImage(mapManos.get(1).get(i), baraja);
+                                    }
                                 }
+                                startTimer(mapPos.get(numPlayers).get(player), player==1);
                             }
                             moveManos(true);
+
+
+
 
                         } catch (JSONException e) {
                             showErrorMessage("Error en el JSON, startGame()");
@@ -182,10 +249,9 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void drawPlayers(JSONArray arrayPlayers) throws JSONException {
-
-        findViewById(getResources().getIdentifier("cardN", "id", getPackageName())).setVisibility(View.INVISIBLE);
-        findViewById(getResources().getIdentifier("cardW", "id", getPackageName())).setVisibility(View.INVISIBLE);
-        findViewById(getResources().getIdentifier("cardE", "id", getPackageName())).setVisibility(View.INVISIBLE);
+        findViewById(getIdView("cardN") ).setVisibility(View.INVISIBLE);
+        findViewById(getIdView("cardW")).setVisibility(View.INVISIBLE);
+        findViewById(getIdView("cardE")).setVisibility(View.INVISIBLE);
         //Añadir N1 y N2 cuando toque
         for(int i = 0; i < arrayPlayers.length(); i++){
             JSONObject jsonPlayer = arrayPlayers.getJSONObject(i);
@@ -195,8 +261,8 @@ public class GameActivity extends AppCompatActivity {
                 continue;
             }
             int playerRelativeNum = getRelativePlayerNum(num, numPlayer, numPlayers);
-            findViewById(getResources().getIdentifier("card" + mapPos.get(numPlayers).get(playerRelativeNum), "id", getPackageName())).setVisibility(View.VISIBLE);
-            TextView textView = findViewById(getResources().getIdentifier("username" + mapPos.get(numPlayers).get(playerRelativeNum), "id", getPackageName()));
+            findViewById(getIdView("card" + mapPos.get(numPlayers).get(playerRelativeNum))).setVisibility(View.VISIBLE);
+            TextView textView = findViewById(getIdView("username" + mapPos.get(numPlayers).get(playerRelativeNum)));
             textView.setText(username);
         }
     }
@@ -433,7 +499,7 @@ public class GameActivity extends AppCompatActivity {
             if(player == 1){
                 prevPlayer = numPlayers;
             }
-            ImageView dest = findViewById(getResources().getIdentifier("mano" + mapPos.get(numPlayers).get(player), "id", getPackageName()));
+            ImageView dest = findViewById(getIdView("mano" + mapPos.get(numPlayers).get(player)));
             for (int i = 0; i < listCards.size(); i++) {
                 Card card = listCards.get(i);
                 String posOri = mapPos.get(numPlayers).get(prevPlayer);
@@ -604,7 +670,11 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void selectCard(View view){
+        if(hasAlreadyPlayed){
+            return; //si ya ha jugado carta, que el selectCard no tenga efecto para mantener la selCard hasta que termine el turno
+        }
         float escala = 1.5f;
+        boolean noButtons = false;
         Card selCard = null;
         for(Card card : mapManos.get(1)){
             if(card.getImagen() == view){
@@ -618,34 +688,37 @@ public class GameActivity extends AppCompatActivity {
                 if(card == selCard){
                     if(!card.isSelected()) {
                         selCard.setSelected(true);
-                        ImageView oldImage = selCard.getImagen();
-                        genCardImage(selCard, oldImage);
-                        selCard.getImagen().setOnClickListener(new View.OnClickListener(){
-                            @Override
-                            public void onClick(View v) {
-                                selectCard(v);
-                            }
-                        });
-                        ((ConstraintLayout)findViewById(R.id.game_layout)).removeView(oldImage);
-
-                        ObjectAnimator animScaleX = ObjectAnimator.ofFloat(selCard.getImagen(), "scaleX", escala);
-                        ObjectAnimator animScaleY = ObjectAnimator.ofFloat(selCard.getImagen(), "scaleY", escala);
-                        AnimatorSet animSetXY = new AnimatorSet();
-                        animSetXY.playTogether(animScaleX, animScaleY);
-                        animSetXY.setDuration(duration/4);
-                        animSetXY.start();
+                        card.getImagen().setElevation(1);
+                        escala = 1.5f;
+                    }else{
+                        selCard.setSelected(false);
+                        escala = 1f;
+                        noButtons = true;
+                        card.getImagen().setElevation(0);
                     }
+                    card.getImagen().setPivotY(card.getImagen().getHeight());
+                    card.getImagen().setPivotX(card.getImagen().getWidth()/2f);
+                    ObjectAnimator animScaleX = ObjectAnimator.ofFloat(card.getImagen(), "scaleX", escala);
+                    ObjectAnimator animScaleY = ObjectAnimator.ofFloat(card.getImagen(), "scaleY", escala);
+                    AnimatorSet animSetXY = new AnimatorSet();
+                    animSetXY.playTogether(animScaleX, animScaleY);
+                    animSetXY.setDuration(duration/4);
+                    animSetXY.start();
                 }else if(card.isSelected()){
+                    card.getImagen().setElevation(0);
+                    card.getImagen().setPivotY(card.getImagen().getHeight());
+                    card.getImagen().setPivotX(card.getImagen().getWidth()/2f);
                     card.setSelected(false);
-                    ObjectAnimator animScaleX = ObjectAnimator.ofFloat(card.getImagen(), "scaleX", 1f);
-                    ObjectAnimator animScaleY = ObjectAnimator.ofFloat(card.getImagen(), "scaleY", 1f);
+                    escala = 1f;
+                    ObjectAnimator animScaleX = ObjectAnimator.ofFloat(card.getImagen(), "scaleX", escala);
+                    ObjectAnimator animScaleY = ObjectAnimator.ofFloat(card.getImagen(), "scaleY", escala);
                     AnimatorSet animSetXY = new AnimatorSet();
                     animSetXY.playTogether(animScaleX, animScaleY);
                     animSetXY.setDuration(duration/4);
                     animSetXY.start();
                 }
             }
-            makeButtons(selCard);
+            makeButtons(selCard, noButtons);
         }
     }
 
@@ -653,26 +726,47 @@ public class GameActivity extends AppCompatActivity {
         return true; //por hacer
     }
 
-    public void makeButtons(Card selCard){
+    public void makeButtons(final Card selCard, boolean noButtons){
         clearButtons();
-        if(hayPalillos){
-            //something
-        }else{
-            switch(selCard.getTipo()){
-                case 7: case 8: case 9:
-                    if(hayWasabiLibre()){
-                        newButton("Jugar con Wasabi", R.drawable.sushi_food_sashimi, false);
-                        newButton("Jugar sin Wasabi", R.drawable.sushi_food_sashimi, false);
+        if(!noButtons) {
+            if (hayPalillos) {
+                //something
+            } else {
+                switch (selCard.getTipo()) {
+                    case 7:
+                    case 8:
+                    case 9:
+                        if (hayWasabiLibre()) {
+                            CardView conWasabiCard = newButton("Jugar con Wasabi", selCard.getImageFoodId(), selCard.getColor(), false);
+                            conWasabiCard.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    playCard(selCard, true);
+                                }
+                            });
+                            CardView sinWasabiCard = newButton("Jugar sin Wasabi", selCard.getImageFoodId(), selCard.getColor(), false);
+                            sinWasabiCard.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    playCard(selCard, false);
+                                }
+                            });
+                            break;
+                        }
+                    default:
+                        String texto = "Jugar " + selCard.getNombre();
+                        int idImagen = selCard.getImageFoodId(); //Cambiar cuando estén todos los renders
+                        CardView playCard = newButton(texto, idImagen, selCard.getColor(), true);
+                        playCard.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                playCard(selCard, false);
+                            }
+                        });
                         break;
-                    }
-                default:
-                    String texto = "Jugar " + selCard.getNombre();
-                    int idImagen = R.drawable.sushi_food_sashimi; //Cambiar cuando estén todos los renders
-                    newButton(texto, idImagen, false);
-                    break;
+                }
             }
         }
-        //Falta añadir el onClick a las CardViews
     }
 
     public int dptopx(int dp){
@@ -684,7 +778,7 @@ public class GameActivity extends AppCompatActivity {
         layoutButtons.removeAllViews();
     }
 
-    public CardView newButton(String texto, int imageId, boolean isOnlyOneButton){
+    public CardView newButton(String texto, int imageId, String color, boolean isOnlyOneButton){
         LinearLayout layoutButtons = findViewById(R.id.layoutButtons);
 
         CardView cardView = new CardView(getApplicationContext());
@@ -694,6 +788,9 @@ public class GameActivity extends AppCompatActivity {
 
         lp.setMargins(dptopx(dp), 0, dptopx(dp), 0);
         cardView.setLayoutParams(lp);
+        cardView.setCardBackgroundColor(Color.parseColor(color));
+        cardView.setRadius(dptopx(8));
+        cardView.setElevation(dptopx(8));
 
         LinearLayout linearLayoutCardView = new LinearLayout(getApplicationContext());
         linearLayoutCardView.setId(View.generateViewId());
@@ -734,5 +831,78 @@ public class GameActivity extends AppCompatActivity {
 
         layoutButtons.addView(cardView);
         return cardView;
+    }
+
+    public void playCard(final Card card, boolean withWasabi){
+        hasAlreadyPlayed = true;
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+
+        StringRequest stringRequest = null;
+        stringRequest = new StringRequest(Request.Method.POST, url + "/playcard",
+                new Response.Listener<String>(){
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject datajson = new JSONObject(response);
+                            String status = datajson.getString("status");
+                            if(status.equals("ok")){
+                                recursiveWaitForTurno();
+                                stopTimer("S");
+                                for(int i = 2; i <= numPlayers; i++){
+                                    findViewById(getIdView("timer" + mapPos.get(numPlayers).get(i))).setVisibility(View.VISIBLE); //CAMBIAR de sitio cuando implemente el recursiveWait
+                                }
+                            }else{
+                                hasAlreadyPlayed = false;
+                                showErrorMessage(status);
+                            }
+
+                        } catch (JSONException e) {
+                            showErrorMessage("Error en el JSON, startGame()");
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener(){
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                showErrorMessage(error.toString());
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("username", username);
+                params.put("sala", String.valueOf(sala));
+                params.put("idgame", idGame);
+                params.put("card", String.valueOf(card.getId()));
+                return params;
+            }
+        };
+        queue.add(stringRequest);
+    }
+
+    public void recursiveWaitForTurno(){
+
+    }
+
+    public void startTimer(String pos, boolean isVisible){
+
+        ProgressBar pb = findViewById(getIdView("timer" + pos));
+        if(isVisible) {
+            pb.setVisibility(View.VISIBLE);
+        }else{
+            pb.setVisibility(View.INVISIBLE);
+        }
+        pb.setMax(countdownDuration);
+        pb.setProgress(countdownDuration);
+        mapTimer.get(pos).start();
+    }
+    public void stopTimer(String pos){
+        findViewById(getIdView("timer" + pos)).setVisibility(View.INVISIBLE);
+        mapTimer.get(pos).cancel();
+    }
+
+    public int getIdView(String name){
+        return getResources().getIdentifier(name, "id", getPackageName());
     }
 }
