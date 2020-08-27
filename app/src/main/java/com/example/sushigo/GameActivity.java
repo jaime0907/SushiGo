@@ -1,6 +1,7 @@
 package com.example.sushigo;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.animation.AnimatorSet;
@@ -8,9 +9,12 @@ import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -59,6 +63,7 @@ public class GameActivity extends AppCompatActivity {
 
     HashMap<Integer, HashMap<Integer, String>> mapPos = new HashMap<>();
 
+    boolean hayPalillos = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -168,6 +173,14 @@ public class GameActivity extends AppCompatActivity {
         queue.add(stringRequest);
     }
 
+    public int getRelativePlayerNum(int player, int numPlayer, int numPlayers){
+        int playerRelativeNum = (player - numPlayer + 1 + numPlayers) % numPlayers;
+        if(playerRelativeNum == 0){
+            playerRelativeNum = numPlayers;
+        }
+        return playerRelativeNum;
+    }
+
     public void drawPlayers(JSONArray arrayPlayers) throws JSONException {
 
         findViewById(getResources().getIdentifier("cardN", "id", getPackageName())).setVisibility(View.INVISIBLE);
@@ -181,10 +194,7 @@ public class GameActivity extends AppCompatActivity {
             if(num == numPlayer){
                 continue;
             }
-            int playerRelativeNum = (num - numPlayer + 1 + numPlayers) % numPlayers;
-            if(playerRelativeNum == 0){
-                playerRelativeNum = numPlayers;
-            }
+            int playerRelativeNum = getRelativePlayerNum(num, numPlayer, numPlayers);
             findViewById(getResources().getIdentifier("card" + mapPos.get(numPlayers).get(playerRelativeNum), "id", getPackageName())).setVisibility(View.VISIBLE);
             TextView textView = findViewById(getResources().getIdentifier("username" + mapPos.get(numPlayers).get(playerRelativeNum), "id", getPackageName()));
             textView.setText(username);
@@ -222,13 +232,11 @@ public class GameActivity extends AppCompatActivity {
                                     try {
                                         JSONObject datajson = new JSONObject(response);
                                         if (datajson.getInt("numplayers") != numPlayers) {
-                                            TextView textPlayers = findViewById(R.id.textPlayers);
                                             JSONArray playersJSON = new JSONArray(datajson.getString("arrayplayers"));
                                             String players = "";
                                             for(int i = 0; i < playersJSON.length(); i++){
                                                 players += (String)playersJSON.get(i) + "\n";
                                             }
-                                            textPlayers.setText(players);
                                             numPlayers = datajson.getInt("numplayers");
                                         }
                                         if (datajson.getString("start").equals("yes")) {
@@ -637,6 +645,94 @@ public class GameActivity extends AppCompatActivity {
                     animSetXY.start();
                 }
             }
+            makeButtons(selCard);
         }
+    }
+
+    public boolean hayWasabiLibre(){
+        return true; //por hacer
+    }
+
+    public void makeButtons(Card selCard){
+        clearButtons();
+        if(hayPalillos){
+            //something
+        }else{
+            switch(selCard.getTipo()){
+                case 7: case 8: case 9:
+                    if(hayWasabiLibre()){
+                        newButton("Jugar con Wasabi", R.drawable.sushi_food_sashimi, false);
+                        newButton("Jugar sin Wasabi", R.drawable.sushi_food_sashimi, false);
+                        break;
+                    }
+                default:
+                    String texto = "Jugar " + selCard.getNombre();
+                    int idImagen = R.drawable.sushi_food_sashimi; //Cambiar cuando estén todos los renders
+                    newButton(texto, idImagen, false);
+                    break;
+            }
+        }
+        //Falta añadir el onClick a las CardViews
+    }
+
+    public int dptopx(int dp){
+        return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
+    }
+
+    public void clearButtons(){
+        LinearLayout layoutButtons = findViewById(R.id.layoutButtons);
+        layoutButtons.removeAllViews();
+    }
+
+    public CardView newButton(String texto, int imageId, boolean isOnlyOneButton){
+        LinearLayout layoutButtons = findViewById(R.id.layoutButtons);
+
+        CardView cardView = new CardView(getApplicationContext());
+        cardView.setId(View.generateViewId());
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1);
+        int dp = 4;
+
+        lp.setMargins(dptopx(dp), 0, dptopx(dp), 0);
+        cardView.setLayoutParams(lp);
+
+        LinearLayout linearLayoutCardView = new LinearLayout(getApplicationContext());
+        linearLayoutCardView.setId(View.generateViewId());
+        LinearLayout.LayoutParams lpLayoutCard = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
+
+        TextView newText = new TextView(getApplicationContext());
+        newText.setId(View.generateViewId());
+        LinearLayout.LayoutParams lpText = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        ImageView newImage = new ImageView(getApplicationContext());
+        newImage.setId(View.generateViewId());
+        LinearLayout.LayoutParams lpImage = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        if(isOnlyOneButton){
+            linearLayoutCardView.setOrientation(LinearLayout.HORIZONTAL);
+            lpText = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+            lpImage = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+        }else{
+            linearLayoutCardView.setOrientation(LinearLayout.VERTICAL);
+        }
+        linearLayoutCardView.setLayoutParams(lpLayoutCard);
+
+        lpText.gravity = Gravity.CENTER;
+        lpText.setMargins(dptopx(8), dptopx(4), dptopx(8), dptopx(4));
+        newText.setLayoutParams(lpText);
+        newText.setText(texto);
+        newText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+
+        lpImage.gravity = Gravity.CENTER;
+        newImage.setLayoutParams(lpImage);
+        newImage.setImageResource(imageId);
+
+        linearLayoutCardView.addView(newText);
+        linearLayoutCardView.addView(newImage);
+
+        cardView.addView(linearLayoutCardView);
+
+        layoutButtons.addView(cardView);
+        return cardView;
     }
 }
