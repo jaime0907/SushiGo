@@ -13,6 +13,7 @@ public class Card {
     private int imageId = 0;
     private int imageFoodId = 0;
     private String color;
+    private int clase = 0;
 
     public Card(int id, ImageView imagen, boolean isFlip, boolean isSelected) {
         this.id = id;
@@ -94,81 +95,102 @@ public class Card {
         this.imageFoodId = imageFoodId;
     }
 
+    public int getClase() {
+        return clase;
+    }
+
+    public void setClase(int clase) {
+        this.clase = clase;
+    }
+
     public void genTipoYNombre(){
         if(id <= 14){
             this.tipo = 1;
+            this.clase = 1;
             this.nombre = "Tempura";
             this.imageId = R.drawable.sushi_tempura;
             this.imageFoodId = R.drawable.sushi_food_tempura;
             this.color = "#ca9eb8";
         }else if(id <= 28){
             this.tipo = 2;
+            this.clase = 2;
             this.nombre = "Sashimi";
             this.imageId = R.drawable.sushi_sashimi;
             this.imageFoodId = R.drawable.sushi_food_sashimi;
             this.color = "#cfcd03";
         }else if(id <= 42){
             this.tipo = 3;
+            this.clase = 3;
             this.nombre = "Gyoza";
             this.imageId = R.drawable.sushi_gyoza;
             this.imageFoodId = R.drawable.sushi_food_gyoza;
             this.color = "#2672bb";
         }else if(id <= 48){
             this.tipo = 4;
+            this.clase = 4;
             this.nombre = "Maki1";
             this.imageId = R.drawable.sushi_maki1;
             this.imageFoodId = R.drawable.sushi_food_maki1;
             this.color = "#ba130a";
         }else if(id <= 60){
             this.tipo = 5;
+            this.clase = 4;
             this.nombre = "Maki2";
             this.imageId = R.drawable.sushi_maki2;
             this.imageFoodId = R.drawable.sushi_food_maki2;
             this.color = "#ba130a";
         }else if(id <= 68){
             this.tipo = 6;
+            this.clase = 4;
             this.nombre = "Maki3";
             this.imageId = R.drawable.sushi_maki3;
             this.imageFoodId = R.drawable.sushi_food_maki3;
             this.color = "#ba130a";
         }else if(id <= 73){
             this.tipo = 7;
+            this.clase = 5;
             this.nombre = "Nigiri1";
             this.imageId = R.drawable.sushi_nigiri1;
             this.imageFoodId = R.drawable.sushi_food_nigiri1;
             this.color = "#f2c007";
         }else if(id <= 83){
             this.tipo = 8;
+            this.clase = 5;
             this.nombre = "Nigiri2";
             this.imageId = R.drawable.sushi_nigiri2;
             this.imageFoodId = R.drawable.sushi_food_nigiri2;
             this.color = "#f2c007";
         }else if(id <= 88){
             this.tipo = 9;
+            this.clase = 5;
             this.nombre = "Nigiri3";
             this.imageId = R.drawable.sushi_nigiri3;
             this.imageFoodId = R.drawable.sushi_food_nigiri3;
             this.color = "#f2c007";
         }else if(id <= 98){
             this.tipo = 10;
+            this.clase = 6;
             this.nombre = "Pudin";
             this.imageId = R.drawable.sushi_pudin;
             this.imageFoodId = R.drawable.sushi_food_pudin;
             this.color = "#e0aba2";
         }else if(id <= 104){
             this.tipo = 11;
+            this.clase = 7;
             this.nombre = "Wasabi";
             this.imageId = R.drawable.sushi_wasabi;
             this.imageFoodId = R.drawable.sushi_food_wasabi;
             this.color = "#f2c007";
         }else if(id <= 108){
             this.tipo = 12;
+            this.clase = 8;
             this.nombre = "Palillos";
             this.imageId = R.drawable.sushi_palillos;
             this.imageFoodId = R.drawable.sushi_food_palillos;
             this.color = "#94cab9";
         }else{
             this.tipo = 0;
+            this.clase = 0;
             this.nombre = "Error";
             this.imageId = R.drawable.sushi_go_template;
             this.imageFoodId = R.drawable.sushi_food_maki1;

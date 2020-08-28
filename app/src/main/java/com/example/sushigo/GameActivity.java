@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,17 +51,11 @@ public class GameActivity extends AppCompatActivity {
     int numPlayers = 0;
     int numPlayer = 0;
 
-    ArrayList<Card> listPlayerCards = new ArrayList<>();
-
     HashMap<Integer, ArrayList<Card>> mapManos = new HashMap<>();
-
-    ArrayList<Card> listaPlayer3 = new ArrayList<Card>();
 
     Handler handler = new Handler();
 
     String url = "http://82.158.149.91:3000";
-
-    ArrayList<Card> cartasPlayer = new ArrayList<>();
 
     HashMap<Integer, HashMap<Integer, String>> mapPos = new HashMap<>();
 
@@ -70,6 +65,9 @@ public class GameActivity extends AppCompatActivity {
     int countdownDuration = 30;
 
     HashMap<String, CountDownTimer> mapTimer = new HashMap<>();
+
+    HashMap<Integer, ArrayList<ArrayList<Card>>> mapTablero = new HashMap<>();
+    HashMap<Integer, HashMap<Integer, Integer>> mapSlotsTablero = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +81,8 @@ public class GameActivity extends AppCompatActivity {
 
         HashMap<Integer, String> mapPos3 = new HashMap<Integer, String>();
         mapPos3.put(1, "S");
-        mapPos3.put(2, "W");
-        mapPos3.put(3, "E");
+        mapPos3.put(2, "N1");
+        mapPos3.put(3, "N2");
 
         HashMap<Integer, String> mapPos4 = new HashMap<Integer, String>();
         mapPos4.put(1, "S");
@@ -92,11 +90,17 @@ public class GameActivity extends AppCompatActivity {
         mapPos4.put(3, "N");
         mapPos4.put(4, "E");
 
-        //Falta 5 players, con N1 y N2.
+        HashMap<Integer, String> mapPos5 = new HashMap<Integer, String>();
+        mapPos5.put(1, "S");
+        mapPos5.put(2, "W");
+        mapPos5.put(3, "N1");
+        mapPos5.put(4, "N2");
+        mapPos5.put(5, "E");
 
         mapPos.put(2, mapPos2);
         mapPos.put(3, mapPos3);
         mapPos.put(4, mapPos4);
+        mapPos.put(5, mapPos5);
 
         mapManos.put(1, new ArrayList<Card>());
         mapManos.put(2, new ArrayList<Card>());
@@ -109,6 +113,32 @@ public class GameActivity extends AppCompatActivity {
             @Override
             public void onTick(long millisUntilFinished) {
                 ProgressBar pb = findViewById(R.id.timerN);
+                pb.setProgress(pb.getProgress() - 1);
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        });
+        mapTimer.put("N1", new CountDownTimer(countdownDuration*1000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                ProgressBar pb = findViewById(R.id.timerN1);
+                pb.setProgress(pb.getProgress() - 1);
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        });
+        mapTimer.put("N2", new CountDownTimer(countdownDuration*1000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                ProgressBar pb = findViewById(R.id.timerN2);
                 pb.setProgress(pb.getProgress() - 1);
             }
 
@@ -157,6 +187,18 @@ public class GameActivity extends AppCompatActivity {
             }
         });
 
+        mapTablero.put(1, new ArrayList<ArrayList<Card>>());
+        mapTablero.put(2, new ArrayList<ArrayList<Card>>());
+        mapTablero.put(3, new ArrayList<ArrayList<Card>>());
+        mapTablero.put(4, new ArrayList<ArrayList<Card>>());
+        mapTablero.put(5, new ArrayList<ArrayList<Card>>());
+
+        mapSlotsTablero.put(1, new HashMap<Integer, Integer>());
+        mapSlotsTablero.put(2, new HashMap<Integer, Integer>());
+        mapSlotsTablero.put(3, new HashMap<Integer, Integer>());
+        mapSlotsTablero.put(4, new HashMap<Integer, Integer>());
+        mapSlotsTablero.put(5, new HashMap<Integer, Integer>());
+
         activityRunning = true;
 
 
@@ -182,7 +224,6 @@ public class GameActivity extends AppCompatActivity {
         username = getIntent().getStringExtra("username");
         sala = getIntent().getIntExtra("sala", 0);
         idGame = getIntent().getStringExtra("idgame");
-        ((ProgressBar)findViewById(R.id.timerS)).setMax(countdownDuration);
 
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
 
@@ -202,7 +243,7 @@ public class GameActivity extends AppCompatActivity {
                             for(int player = 1; player <= numPlayers; player++){
                                 for(int i = 0; i < mapManos.get(1).size(); i++){
                                     if(player != 1){
-                                        Card c1 = new Card((int)(Math.floor(Math.random()*108 + 1)), null, player != 1, false);
+                                        Card c1 = new Card((int)(Math.floor(Math.random()*108 + 1)), null, true, false);
                                         genCardImage(c1, baraja);
                                         mapManos.get(player).add(c1);
                                     }else{
@@ -212,10 +253,6 @@ public class GameActivity extends AppCompatActivity {
                                 startTimer(mapPos.get(numPlayers).get(player), player==1);
                             }
                             moveManos(true);
-
-
-
-
                         } catch (JSONException e) {
                             showErrorMessage("Error en el JSON, startGame()");
                             e.printStackTrace();
@@ -240,7 +277,7 @@ public class GameActivity extends AppCompatActivity {
         queue.add(stringRequest);
     }
 
-    public int getRelativePlayerNum(int player, int numPlayer, int numPlayers){
+    public int getRelativePlayerNum(int player){
         int playerRelativeNum = (player - numPlayer + 1 + numPlayers) % numPlayers;
         if(playerRelativeNum == 0){
             playerRelativeNum = numPlayers;
@@ -250,9 +287,10 @@ public class GameActivity extends AppCompatActivity {
 
     public void drawPlayers(JSONArray arrayPlayers) throws JSONException {
         findViewById(getIdView("cardN") ).setVisibility(View.INVISIBLE);
+        findViewById(getIdView("cardN1") ).setVisibility(View.INVISIBLE);
+        findViewById(getIdView("cardN2") ).setVisibility(View.INVISIBLE);
         findViewById(getIdView("cardW")).setVisibility(View.INVISIBLE);
         findViewById(getIdView("cardE")).setVisibility(View.INVISIBLE);
-        //Añadir N1 y N2 cuando toque
         for(int i = 0; i < arrayPlayers.length(); i++){
             JSONObject jsonPlayer = arrayPlayers.getJSONObject(i);
             String username = jsonPlayer.getString("username");
@@ -260,7 +298,11 @@ public class GameActivity extends AppCompatActivity {
             if(num == numPlayer){
                 continue;
             }
-            int playerRelativeNum = getRelativePlayerNum(num, numPlayer, numPlayers);
+            int playerRelativeNum = getRelativePlayerNum(num);
+            Log.d("numPlayers", String.valueOf(numPlayers));
+            Log.d("num", String.valueOf(num));
+            Log.d("relativeNum", String.valueOf(playerRelativeNum));
+            Log.d("mapPos", mapPos.get(numPlayers).get(playerRelativeNum));
             findViewById(getIdView("card" + mapPos.get(numPlayers).get(playerRelativeNum))).setVisibility(View.VISIBLE);
             TextView textView = findViewById(getIdView("username" + mapPos.get(numPlayers).get(playerRelativeNum)));
             textView.setText(username);
@@ -348,18 +390,6 @@ public class GameActivity extends AppCompatActivity {
         findViewById(R.id.errorLayout).setVisibility(View.GONE);
     }
 
-    public void redrawAll(){
-        ImageView playerTemplate = findViewById(R.id.manoS);
-        Card c = null;
-        int x = 0;
-        for(int i = 0; i < cartasPlayer.size(); i++){
-            c = cartasPlayer.get(i);
-            float mitad = (cartasPlayer.size()-1)/2f;
-            x = (int)(playerTemplate.getX() + widthCard*(i-mitad));
-            moveCard(c, x, playerTemplate.getY(), false, true, duration);
-        }
-    }
-
     public void genCardImage(Card card, ImageView slot){
         ImageView newCardImage = new ImageView(getApplicationContext());
         if(card.isFlip()){
@@ -378,12 +408,30 @@ public class GameActivity extends AppCompatActivity {
         card.setImagen(newCardImage);
     }
 
-    public void moveCard(Card card, float x, float y, Boolean toPila, Boolean withFlip, int duration){
-
-        ConstraintLayout layout = findViewById(R.id.game_layout);
+    public void regenCardImage(Card card){
+        ImageView newCardImage = new ImageView(getApplicationContext());
         ImageView oldCardImage = card.getImagen();
-        genCardImage(card, card.getImagen());
+
+        newCardImage.setId(View.generateViewId());
+        if(card.isFlip()){
+            newCardImage.setImageResource(R.drawable.sushi_back);
+        }else{
+            newCardImage.setImageResource(card.getImageId());
+        }
+        newCardImage.setLayoutParams(oldCardImage.getLayoutParams());
+        newCardImage.setScaleX(oldCardImage.getScaleX());
+        newCardImage.setScaleY(oldCardImage.getScaleY());
+        newCardImage.setRotation(oldCardImage.getRotation());
+        newCardImage.setX(oldCardImage.getX());
+        newCardImage.setY(oldCardImage.getY());
+        ConstraintLayout layout = findViewById(R.id.game_layout);
+        layout.addView(newCardImage);
+        card.setImagen(newCardImage);
         layout.removeView(oldCardImage);
+    }
+
+    public void moveCard(Card card, float x, float y, Boolean withFlip, int duration, boolean toN){
+        regenCardImage(card);
         card.getImagen().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -391,27 +439,18 @@ public class GameActivity extends AppCompatActivity {
             }
         });
 
-        if(toPila){
-            x +=  Math.random()*10;
-            y +=  Math.random()*10;
-        }
         ObjectAnimator animX = ObjectAnimator.ofFloat(card.getImagen(), "x", x);
         ObjectAnimator animY = ObjectAnimator.ofFloat(card.getImagen(), "y", y);
-        ObjectAnimator animRot = ObjectAnimator.ofFloat(card.getImagen(), "rotation", 0, (float)(Math.random()-0.5)*10);
         AnimatorSet animSetXY = new AnimatorSet();
-        if(toPila){
-            animSetXY.playTogether(animX, animY, animRot);
-        }else{
-            animSetXY.playTogether(animX, animY);
-        }
+        animSetXY.playTogether(animX, animY);
         animSetXY.setDuration(duration);
         animSetXY.start();
         if(withFlip) {
-            flipCard(card, duration);
+            flipCard(card, duration, toN);
         }
     }
 
-    public void flipCard(Card card, final int duration){
+    public void flipCard(Card card, final int duration, final boolean toN){
         final Card cardCopy = card;
         int startRot = 0;
         int endRot = -90;
@@ -435,6 +474,9 @@ public class GameActivity extends AppCompatActivity {
                     startRot = -90;
                     endRot = 0;
                 }
+                if(toN){
+                    cardCopy.getImagen().setRotation(0);
+                }
 
                 if(cardCopy.isFlip()){
                     cardCopy.getImagen().setImageResource(cardCopy.getImageId());
@@ -454,14 +496,60 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void addCardPlayer3(View view){
-        listaPlayer3.add(new Card(1, null, true, false));
-        drawPlayer3(listaPlayer3);
+        for(int player = 1; player <= numPlayers; player++) {
+            int ncard = 0;
+            final Card card = mapManos.get(player).get(ncard);
+            mapManos.get(player).remove(ncard);
+            if (player == 1) {
+                Card cardOrigen = card;
+                ImageView origen = cardOrigen.getImagen();
+                ImageView newCardImage = new ImageView(getApplicationContext());
+                if (card.isFlip()) {
+                    newCardImage.setImageResource(R.drawable.sushi_back);
+                } else {
+                    newCardImage.setImageResource(cardOrigen.getImageId());
+                }
+
+                newCardImage.setId(View.generateViewId());
+
+                newCardImage.setScaleX(scaleCard("S", "N"));
+                newCardImage.setScaleY(scaleCard("S", "N"));
+                newCardImage.setRotation(rotateCard("S"));
+
+                ImageView destino = findViewById(R.id.tableroS);
+
+                ConstraintLayout.LayoutParams lp = new ConstraintLayout.LayoutParams(destino.getWidth(), destino.getHeight());
+                newCardImage.setLayoutParams(lp);
+                newCardImage.setX(origen.getX() + origen.getWidth() / 2f - destino.getWidth() / 2f);
+                newCardImage.setY(origen.getY() + origen.getHeight() / 2f - destino.getHeight() / 2f);
+
+                ConstraintLayout layout = findViewById(R.id.game_layout);
+                layout.addView(newCardImage);
+                layout.removeView(origen);
+                cardOrigen.setImagen(newCardImage);
+            }
+            addCardToTablero(player, card);
+            drawTableroPlayer(mapTablero.get(player), mapPos.get(numPlayers).get(player));
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d("Card X", String.valueOf(card.getImagen().getX()));
+                    Log.d("Slot X", String.valueOf(((ImageView) findViewById(R.id.tableroS)).getX()));
+                    Log.d("Card Y", String.valueOf(card.getImagen().getY()));
+                    Log.d("Slot Y", String.valueOf(((ImageView) findViewById(R.id.tableroS)).getY()));
+                    Log.d("Card Width", String.valueOf(card.getImagen().getWidth()));
+                    Log.d("Slot Width", String.valueOf(((ImageView) findViewById(R.id.tableroS)).getWidth()));
+                    Log.d("Card Height", String.valueOf(card.getImagen().getHeight()));
+                    Log.d("Slot Height", String.valueOf(((ImageView) findViewById(R.id.tableroS)).getHeight()));
+                }
+            }, 2 * duration);
+        }
     }
 
     public void buttonMoveCards(View view){
 
         for (int i = 0; i < 10; i++) {
-            flipCard(mapManos.get(1).get(i), duration/2);
+            flipCard(mapManos.get(1).get(i), duration/2, false);
         }
 
         ArrayList<Card> aux;
@@ -483,7 +571,7 @@ public class GameActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         for (int i = 0; i < 10; i++) {
-                            flipCard(mapManos.get(1).get(i), duration / 2);
+                            flipCard(mapManos.get(1).get(i), duration / 2, false);
                         }
                     }
                 }, duration);
@@ -522,10 +610,14 @@ public class GameActivity extends AppCompatActivity {
                     return 2.5f;
                 }
             case "N":
+            case "N1":
+            case "N2":
                 if(posDest.equals("E")){
                     return 1.5f;
-                }else{
+                }else if(posDest.equals("S")){
                     return 0.6f;
+                }else{
+                    return 1f;
                 }
             case "W":
                 return 1f;
@@ -540,6 +632,8 @@ public class GameActivity extends AppCompatActivity {
             case "S":
                 return 0;
             case "N":
+            case "N1":
+            case "N2":
                 return 180;
             case "W":
                 return -90;
@@ -585,6 +679,8 @@ public class GameActivity extends AppCompatActivity {
                 });
                 break;
             case "N":
+            case "N1":
+            case "N2":
                 rotacion = -180;
                 escala = 1f;
                 x = destino.getWidth()*(ncard-((totalcards-1)/2f))*0.1f;
@@ -624,47 +720,165 @@ public class GameActivity extends AppCompatActivity {
         animSetXY.start();
     }
 
-    public void drawPlayer3(ArrayList<Card> listaCards){
-        ImageView image1 = findViewById(R.id.cartaRivalP3);
-        int width = image1.getWidth();
-        int height = image1.getHeight();
-        float x = image1.getX();
-        float y = image1.getY();
-
-        int numcards = listaCards.size();
-        for(int i = 0; i < numcards; i++){
-            float xcard;
-            float ycard;
-            int cardsinrow = 4;
-            if( (i/4) == (numcards / 4)){
-                cardsinrow = numcards % 4;
+    public boolean pilaNotFull(ArrayList<Card> pila, int clase, boolean wasabiConNigiri){
+        int ncards = pila.size();
+        switch(clase){
+            case 1:
+                return ncards < 2;
+            case 2:
+                return ncards < 3;
+            case 3: case 6:
+                return true;
+            case 5:
+                if(wasabiConNigiri){
+                    return ncards < 3;
+                }else{
+                    return ncards < 4;
             }
-            xcard = x + (i / 4)*width;
-            ycard = y + height*((i % 4)*2 - (cardsinrow-1))/2f;
-            Card card = listaCards.get(i);
-            ImageView newCardImage;
+            default:
+                return ncards < 4;
 
-            if(card.getImagen() == null){
-                newCardImage = new ImageView(getApplicationContext());
+        }
+    }
+
+    public void addCardToTablero(int player, Card card){
+        String pos = mapPos.get(numPlayers).get(player);
+        ArrayList<ArrayList<Card>> tablero = mapTablero.get(player);
+        HashMap<Integer, Integer> slotsTablero = mapSlotsTablero.get(player);
+        if(slotsTablero.containsKey(card.getClase())){
+            ArrayList<Card> pila = tablero.get(slotsTablero.get(card.getClase()));
+            if(pilaNotFull(pila, card.getClase(), false)){
+                pila.add(card);
             }else{
-                newCardImage = card.getImagen();
+                ArrayList<Card> newLista = new ArrayList<Card>();
+                newLista.add(card);
+                tablero.add(newLista);
+                slotsTablero.put(card.getClase(), tablero.size()-1);
             }
+        }else{
+            ArrayList<Card> newLista = new ArrayList<Card>();
+            newLista.add(card);
+            tablero.add(newLista);
+            slotsTablero.put(card.getClase(), tablero.size()-1);
+        }
+    }
 
-            if(card.isFlip()){
-                newCardImage.setImageResource(R.drawable.sushi_back_270);
-            }else{
-                newCardImage.setImageResource(card.getImageId());
-            }
+    public void drawTableroPlayer(ArrayList<ArrayList<Card>> listaPilas, String posDest){
+        ImageView destino = findViewById(getIdView("tablero" + posDest));
+        int width = destino.getWidth();
+        int height = destino.getHeight();
+        float xslot = destino.getX();
+        float yslot = destino.getY();
+        int maxPilasInRow = 4;
+        float porcentajeApliado = 0.165f;
 
-            newCardImage.setId(View.generateViewId());
+        switch (posDest) {
+            case "S":
+            case "N":
+                maxPilasInRow = 10;
+                break;
+            case "N1":
+            case "N2":
+                maxPilasInRow = 7;
+                break;
+            case "W":
+            case "E":
+                maxPilasInRow = 4;
+                break;
+        }
 
-            ConstraintLayout.LayoutParams lp = new ConstraintLayout.LayoutParams(width,height);
-            newCardImage.setLayoutParams(lp);
-            newCardImage.setX(xcard);
-            newCardImage.setY(ycard);
-            if(card.getImagen() == null) {
-                ((ConstraintLayout) findViewById(R.id.game_layout)).addView(newCardImage);
-                card.setImagen(newCardImage);
+        int totalpilas = listaPilas.size();
+        for(int i = 0; i < totalpilas; i++){
+            int nrow = (i / maxPilasInRow);
+            for(int j = 0; j < listaPilas.get(i).size(); j++) {
+                float xcard = 0;
+                float ycard = 0;
+
+                float desplazamientoLastRow = 0;
+
+                float apilado = j * porcentajeApliado;
+
+                if(nrow != 0){
+                    int max = 1;
+                    for(int a = (nrow-1)*maxPilasInRow; a < nrow*maxPilasInRow; a++){
+                        if(listaPilas.get(a).size() > max){
+                            max = listaPilas.get(a).size();
+                        }
+                    }
+                    desplazamientoLastRow = porcentajeApliado * (max - 1);
+                }
+                float desplazamientoCurrentRow = 0;
+                if(posDest.equals("S")){
+                    int max = 1;
+                    for(int a = 0; a < listaPilas.size(); a++){
+                        if(listaPilas.get(a).size() > max){
+                            max = listaPilas.get(a).size();
+                        }
+                    }
+                    desplazamientoCurrentRow = porcentajeApliado * (max - 1);
+                }
+
+                int pilasInRow = maxPilasInRow;
+
+                if (nrow == (totalpilas / maxPilasInRow)) {
+                    pilasInRow = totalpilas % maxPilasInRow;
+                }
+
+                switch (posDest) {
+                    case "S":
+                        ycard = yslot + (nrow - desplazamientoCurrentRow + apilado) * height;
+                        xcard = xslot + width * ((i % maxPilasInRow) * 2 - (pilasInRow - 1)) / 2f;
+                        break;
+                    case "N":
+                    case "N1":
+                    case "N2":
+                        ycard = yslot + (nrow + desplazamientoLastRow + apilado) * height;
+                        xcard = xslot + width * ((i % maxPilasInRow) * 2 - (pilasInRow - 1)) / 2f;
+                        break;
+                    case "W":
+                        xcard = xslot + (nrow + desplazamientoLastRow + apilado) * width;
+                        ycard = yslot + height * ((i % maxPilasInRow) * 2 - (pilasInRow - 1)) / 2f;
+                        break;
+                    case "E":
+                        xcard = xslot - (nrow + desplazamientoLastRow + apilado) * width;
+                        ycard = yslot + height * ((i % maxPilasInRow) * 2 - (pilasInRow - 1)) / 2f;
+                        break;
+                }
+
+                Card card = listaPilas.get(i).get(j);
+
+                if (card.getImagen() == null) {
+                    ImageView newCardImage;
+                    newCardImage = new ImageView(getApplicationContext());
+                    if (card.isFlip()) {
+                        newCardImage.setImageResource(R.drawable.sushi_back);
+                    } else {
+                        newCardImage.setImageResource(card.getImageId());
+                    }
+
+                    newCardImage.setId(View.generateViewId());
+
+                    ConstraintLayout.LayoutParams lp = new ConstraintLayout.LayoutParams(width, height);
+                    newCardImage.setLayoutParams(lp);
+                    newCardImage.setX(xcard);
+                    newCardImage.setY(ycard);
+                    ((ConstraintLayout) findViewById(R.id.game_layout)).addView(newCardImage);
+                    card.setImagen(newCardImage);
+                }
+
+                boolean toN = false;
+                toN = posDest.equals("N") || posDest.equals("N1") || posDest.equals("N2");
+                moveCard(card, xcard, ycard, card.isFlip(), duration, toN);
+
+                if (posDest.equals("S")) {
+                    ObjectAnimator animScaleX = ObjectAnimator.ofFloat(card.getImagen(), "scaleX", 1f);
+                    ObjectAnimator animScaleY = ObjectAnimator.ofFloat(card.getImagen(), "scaleY", 1f);
+                    AnimatorSet animSetXY = new AnimatorSet();
+
+                    animSetXY.playTogether(animScaleX, animScaleY);
+                    animSetXY.setDuration(duration);
+                    animSetXY.start();
+                }
             }
         }
     }
