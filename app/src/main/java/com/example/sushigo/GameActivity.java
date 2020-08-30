@@ -44,18 +44,23 @@ public class GameActivity extends AppCompatActivity {
     int heightCard = 441;
 
     int duration = 1000;
+    int durationRecursive = 1000;
 
     String idGame = null;
     String username = null;
     int sala = 0;
     int numPlayers = 0;
     int numPlayer = 0;
+    int turno = 0;
+
+    float escalaSel = 1.5f;
 
     HashMap<Integer, ArrayList<Card>> mapManos = new HashMap<>();
 
     Handler handler = new Handler();
+    RequestQueue queue;
 
-    String url = "http://82.158.149.91:3000";
+    String url = "https://sushigo-backend-jaime.herokuapp.com";
 
     HashMap<Integer, HashMap<Integer, String>> mapPos = new HashMap<>();
 
@@ -68,12 +73,15 @@ public class GameActivity extends AppCompatActivity {
 
     HashMap<Integer, ArrayList<ArrayList<Card>>> mapTablero = new HashMap<>();
     HashMap<Integer, HashMap<Integer, Integer>> mapSlotsTablero = new HashMap<>();
+    HashMap<Integer, Boolean> mapHasPlayed = new HashMap<>();
+    HashMap<Integer, ArrayList<Integer>> mapWasabisLibres = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_game);
+        url = getApplicationContext().getSharedPreferences("preferences", MODE_PRIVATE).getString("url", "https://sushigo-backend-jaime.herokuapp.com");
 
         HashMap<Integer, String> mapPos2 = new HashMap<Integer, String>();
         mapPos2.put(1, "S");
@@ -199,6 +207,12 @@ public class GameActivity extends AppCompatActivity {
         mapSlotsTablero.put(4, new HashMap<Integer, Integer>());
         mapSlotsTablero.put(5, new HashMap<Integer, Integer>());
 
+        mapWasabisLibres.put(1, new ArrayList<Integer>());
+        mapWasabisLibres.put(2, new ArrayList<Integer>());
+        mapWasabisLibres.put(3, new ArrayList<Integer>());
+        mapWasabisLibres.put(4, new ArrayList<Integer>());
+        mapWasabisLibres.put(5, new ArrayList<Integer>());
+
         activityRunning = true;
 
 
@@ -219,13 +233,13 @@ public class GameActivity extends AppCompatActivity {
 
     public void startGame(){
         ImageView carta1 = findViewById(R.id.manoS);
+        queue = Volley.newRequestQueue(getApplicationContext());
         widthCard = carta1.getWidth();
         heightCard = carta1.getHeight();
         username = getIntent().getStringExtra("username");
         sala = getIntent().getIntExtra("sala", 0);
         idGame = getIntent().getStringExtra("idgame");
 
-        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
 
         StringRequest stringRequest = null;
         stringRequest = new StringRequest(Request.Method.POST, url + "/initgame",
@@ -236,6 +250,7 @@ public class GameActivity extends AppCompatActivity {
                             JSONObject datajson = new JSONObject(response);
                             numPlayers = datajson.getInt("numplayers");
                             numPlayer = datajson.getInt("numplayer");
+                            turno = datajson.getInt("turno");
                             drawPlayers(datajson.getJSONArray("arrayplayers"));
                             mapManos.put(1,JSONCardsToList(datajson.getJSONArray("cartas")));
 
@@ -243,7 +258,7 @@ public class GameActivity extends AppCompatActivity {
                             for(int player = 1; player <= numPlayers; player++){
                                 for(int i = 0; i < mapManos.get(1).size(); i++){
                                     if(player != 1){
-                                        Card c1 = new Card((int)(Math.floor(Math.random()*108 + 1)), null, true, false);
+                                        Card c1 = new Card(0, null, true, false);
                                         genCardImage(c1, baraja);
                                         mapManos.get(player).add(c1);
                                     }else{
@@ -251,8 +266,10 @@ public class GameActivity extends AppCompatActivity {
                                     }
                                 }
                                 startTimer(mapPos.get(numPlayers).get(player), player==1);
+                                mapHasPlayed.put(player, false);
                             }
-                            moveManos(true);
+                            redrawManos(true);
+                            recursiveWaitForTurno();
                         } catch (JSONException e) {
                             showErrorMessage("Error en el JSON, startGame()");
                             e.printStackTrace();
@@ -331,7 +348,6 @@ public class GameActivity extends AppCompatActivity {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
                     StringRequest stringRequest = null;
                     stringRequest = new StringRequest(Request.Method.POST, url + "/waitstart",
                             new Response.Listener<String>() {
@@ -419,6 +435,8 @@ public class GameActivity extends AppCompatActivity {
             newCardImage.setImageResource(card.getImageId());
         }
         newCardImage.setLayoutParams(oldCardImage.getLayoutParams());
+        newCardImage.setPivotX(oldCardImage.getPivotX());
+        newCardImage.setPivotY(oldCardImage.getPivotY());
         newCardImage.setScaleX(oldCardImage.getScaleX());
         newCardImage.setScaleY(oldCardImage.getScaleY());
         newCardImage.setRotation(oldCardImage.getRotation());
@@ -430,8 +448,10 @@ public class GameActivity extends AppCompatActivity {
         layout.removeView(oldCardImage);
     }
 
-    public void moveCard(Card card, float x, float y, Boolean withFlip, int duration, boolean toN){
-        regenCardImage(card);
+    public void moveCard(Card card, float x, float y, Boolean withFlip, int duration, boolean toN, boolean withRegen){
+        if(withRegen) {
+            regenCardImage(card);
+        }
         card.getImagen().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -495,41 +515,61 @@ public class GameActivity extends AppCompatActivity {
 
     }
 
+    public void regenCardPlayerForTablero(Card card){
+        Card cardOrigen = card;
+        ImageView origen = cardOrigen.getImagen();
+        ImageView newCardImage = new ImageView(getApplicationContext());
+        if (card.isFlip()) {
+            newCardImage.setImageResource(R.drawable.sushi_back);
+        } else {
+            newCardImage.setImageResource(cardOrigen.getImageId());
+        }
+
+        newCardImage.setId(View.generateViewId());
+
+
+        ImageView destino = findViewById(R.id.tableroS);
+
+        float multiplicador = 1f;
+
+
+
+        ConstraintLayout.LayoutParams lp = new ConstraintLayout.LayoutParams(destino.getWidth(), destino.getHeight());
+        newCardImage.setLayoutParams(lp);
+        //newCardImage.setX(origen.getX() + origen.getWidth() / 2f - destino.getWidth() / 2f);
+        //newCardImage.setY(origen.getY() + origen.getHeight() / 2f - destino.getHeight() / 2f);
+
+        //newCardImage.setX(origen.getX() + ((origen.getWidth()/2f)*(1 - escalaSel)) + origen.getWidth()/2f);
+        //newCardImage.setY(origen.getY() + (origen.getHeight()*(1f - escalaSel)) + origen.getHeight()/2f);
+
+        newCardImage.setX(origen.getX() + origen.getWidth()/2f - destino.getWidth()/2f);
+        newCardImage.setY(origen.getY() + (origen.getHeight()/2f)*(2f - escalaSel) - destino.getHeight()/2f);
+
+        //newCardImage.setPivotX(0);
+        //newCardImage.setPivotY(0);
+
+        newCardImage.setScaleX(scaleCard("S", "N")*escalaSel);
+        newCardImage.setScaleY(scaleCard("S", "N")*escalaSel);
+
+        ConstraintLayout layout = findViewById(R.id.game_layout);
+        layout.addView(newCardImage);
+
+
+
+        layout.removeView(origen);
+        cardOrigen.setImagen(newCardImage);
+    }
+
     public void addCardPlayer3(View view){
         for(int player = 1; player <= numPlayers; player++) {
             int ncard = 0;
             final Card card = mapManos.get(player).get(ncard);
             mapManos.get(player).remove(ncard);
             if (player == 1) {
-                Card cardOrigen = card;
-                ImageView origen = cardOrigen.getImagen();
-                ImageView newCardImage = new ImageView(getApplicationContext());
-                if (card.isFlip()) {
-                    newCardImage.setImageResource(R.drawable.sushi_back);
-                } else {
-                    newCardImage.setImageResource(cardOrigen.getImageId());
-                }
-
-                newCardImage.setId(View.generateViewId());
-
-                newCardImage.setScaleX(scaleCard("S", "N"));
-                newCardImage.setScaleY(scaleCard("S", "N"));
-                newCardImage.setRotation(rotateCard("S"));
-
-                ImageView destino = findViewById(R.id.tableroS);
-
-                ConstraintLayout.LayoutParams lp = new ConstraintLayout.LayoutParams(destino.getWidth(), destino.getHeight());
-                newCardImage.setLayoutParams(lp);
-                newCardImage.setX(origen.getX() + origen.getWidth() / 2f - destino.getWidth() / 2f);
-                newCardImage.setY(origen.getY() + origen.getHeight() / 2f - destino.getHeight() / 2f);
-
-                ConstraintLayout layout = findViewById(R.id.game_layout);
-                layout.addView(newCardImage);
-                layout.removeView(origen);
-                cardOrigen.setImagen(newCardImage);
+                regenCardPlayerForTablero(card);
             }
             addCardToTablero(player, card);
-            drawTableroPlayer(mapTablero.get(player), mapPos.get(numPlayers).get(player));
+            drawTableroPlayer(player);
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -546,12 +586,18 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    public void buttonMoveCards(View view){
-
-        for (int i = 0; i < 10; i++) {
+    public void moveManos(ArrayList<Card> playerCards){
+        for (int i = 0; i < mapManos.get(1).size(); i++) {
             flipCard(mapManos.get(1).get(i), duration/2, false);
         }
-
+        if(playerCards.size() == mapManos.get(numPlayers).size()){
+            for(int i = 0; i < playerCards.size(); i++) {
+                mapManos.get(numPlayers).get(i).setId(playerCards.get(i).getId());
+                mapManos.get(numPlayers).get(i).genTipoYNombre();
+            }
+        }else{
+            showErrorMessage("El número de cartas en la mano del ultimo jugador y las del JSON no coinciden");
+        }
         ArrayList<Card> aux;
         aux = (ArrayList<Card>) mapManos.get(1).clone();
         for(int player = numPlayers; player >= 2; player--){
@@ -566,11 +612,11 @@ public class GameActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                moveManos(false);
+                redrawManos(false);
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        for (int i = 0; i < 10; i++) {
+                        for (int i = 0; i < mapManos.get(1).size(); i++) {
                             flipCard(mapManos.get(1).get(i), duration / 2, false);
                         }
                     }
@@ -580,7 +626,7 @@ public class GameActivity extends AppCompatActivity {
 
     }
 
-    public void moveManos(boolean isReparto){
+    public void redrawManos(boolean isReparto){
         for(int player = 1; player <= numPlayers; player++) {
             ArrayList<Card> listCards = mapManos.get(player);
             int prevPlayer = player - 1;
@@ -613,7 +659,7 @@ public class GameActivity extends AppCompatActivity {
             case "N1":
             case "N2":
                 if(posDest.equals("E")){
-                    return 1.5f;
+                    return escalaSel;
                 }else if(posDest.equals("S")){
                     return 0.6f;
                 }else{
@@ -687,12 +733,12 @@ public class GameActivity extends AppCompatActivity {
                 break;
             case "W":
                 rotacion = -90;
-                escala = 1.5f;
+                escala = escalaSel;
                 y = destino.getHeight()*(ncard-((totalcards-1)/2f))*0.1f;
                 break;
             case "E":
                 rotacion = 90;
-                escala = 1.5f;
+                escala = escalaSel;
                 y = destino.getHeight()*(ncard-((totalcards-1)/2f))*0.1f;
                 break;
         }
@@ -720,7 +766,7 @@ public class GameActivity extends AppCompatActivity {
         animSetXY.start();
     }
 
-    public boolean pilaNotFull(ArrayList<Card> pila, int clase, boolean wasabiConNigiri){
+    public boolean pilaNotFull(ArrayList<Card> pila, int clase, boolean nigiriAWasabi){
         int ncards = pila.size();
         switch(clase){
             case 1:
@@ -729,15 +775,24 @@ public class GameActivity extends AppCompatActivity {
                 return ncards < 3;
             case 3: case 6:
                 return true;
-            case 5:
-                if(wasabiConNigiri){
-                    return ncards < 3;
+            case 7:
+                if(nigiriAWasabi){
+                    return ncards < 2;
                 }else{
-                    return ncards < 4;
+                    return ncards < 1;
             }
             default:
                 return ncards < 4;
 
+        }
+    }
+
+    public void addNigiriConWasabi(int player, Card card){
+        if(mapWasabisLibres.get(player).size() > 0){
+            mapTablero.get(player).get(mapWasabisLibres.get(player).get(0)).add(card);
+            mapWasabisLibres.get(player).remove(0);
+        }else{
+            showErrorMessage("No hay wasabis libres");
         }
     }
 
@@ -761,9 +816,15 @@ public class GameActivity extends AppCompatActivity {
             tablero.add(newLista);
             slotsTablero.put(card.getClase(), tablero.size()-1);
         }
+        if(card.getClase() == 7){
+            mapWasabisLibres.get(player).add(tablero.size()-1);
+        }
     }
 
-    public void drawTableroPlayer(ArrayList<ArrayList<Card>> listaPilas, String posDest){
+    public void drawTableroPlayer(int player){
+        Log.d("drawTableroPlayer()", "yes");
+        ArrayList<ArrayList<Card>> listaPilas = mapTablero.get(player);
+        String posDest = mapPos.get(numPlayers).get(player);
         ImageView destino = findViewById(getIdView("tablero" + posDest));
         int width = destino.getWidth();
         int height = destino.getHeight();
@@ -868,7 +929,15 @@ public class GameActivity extends AppCompatActivity {
 
                 boolean toN = false;
                 toN = posDest.equals("N") || posDest.equals("N1") || posDest.equals("N2");
-                moveCard(card, xcard, ycard, card.isFlip(), duration, toN);
+                boolean withFlip = card.isFlip();
+                if(card.getClase() == 0){
+                    withFlip = false;
+                }
+                //Log.d("i", String.valueOf(i));
+                //Log.d("j", String.valueOf(j));
+                //Log.d("withFlip", String.valueOf(withFlip));
+                //Log.d("card", String.valueOf(card.getId()));
+                moveCard(card, xcard, ycard, withFlip, duration, toN, player != 1);
 
                 if (posDest.equals("S")) {
                     ObjectAnimator animScaleX = ObjectAnimator.ofFloat(card.getImagen(), "scaleX", 1f);
@@ -887,7 +956,7 @@ public class GameActivity extends AppCompatActivity {
         if(hasAlreadyPlayed){
             return; //si ya ha jugado carta, que el selectCard no tenga efecto para mantener la selCard hasta que termine el turno
         }
-        float escala = 1.5f;
+        float escala = escalaSel;
         boolean noButtons = false;
         Card selCard = null;
         for(Card card : mapManos.get(1)){
@@ -903,7 +972,7 @@ public class GameActivity extends AppCompatActivity {
                     if(!card.isSelected()) {
                         selCard.setSelected(true);
                         card.getImagen().setElevation(1);
-                        escala = 1.5f;
+                        escala = escalaSel;
                     }else{
                         selCard.setSelected(false);
                         escala = 1f;
@@ -937,7 +1006,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public boolean hayWasabiLibre(){
-        return true; //por hacer
+        return mapWasabisLibres.get(1).size() > 0;
     }
 
     public void makeButtons(final Card selCard, boolean noButtons){
@@ -1047,9 +1116,8 @@ public class GameActivity extends AppCompatActivity {
         return cardView;
     }
 
-    public void playCard(final Card card, boolean withWasabi){
+    public void playCard(final Card card, final boolean withWasabi){
         hasAlreadyPlayed = true;
-        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
 
         StringRequest stringRequest = null;
         stringRequest = new StringRequest(Request.Method.POST, url + "/playcard",
@@ -1060,10 +1128,19 @@ public class GameActivity extends AppCompatActivity {
                             JSONObject datajson = new JSONObject(response);
                             String status = datajson.getString("status");
                             if(status.equals("ok")){
-                                recursiveWaitForTurno();
+                                card.setClase(0);
+                                regenCardPlayerForTablero(card);
+                                addCardToTablero(1, card);
+                                mapManos.get(1).remove(mapManos.get(1).indexOf(card));
+                                drawTableroPlayer(1);
+                                flipCard(card, duration, false);
+
+                                clearButtons();
                                 stopTimer("S");
                                 for(int i = 2; i <= numPlayers; i++){
-                                    findViewById(getIdView("timer" + mapPos.get(numPlayers).get(i))).setVisibility(View.VISIBLE); //CAMBIAR de sitio cuando implemente el recursiveWait
+                                    if(!mapHasPlayed.get(i)) {
+                                        findViewById(getIdView("timer" + mapPos.get(numPlayers).get(i))).setVisibility(View.VISIBLE);
+                                    }
                                 }
                             }else{
                                 hasAlreadyPlayed = false;
@@ -1089,6 +1166,12 @@ public class GameActivity extends AppCompatActivity {
                 params.put("sala", String.valueOf(sala));
                 params.put("idgame", idGame);
                 params.put("card", String.valueOf(card.getId()));
+                params.put("turno", String.valueOf(turno));
+                if(withWasabi) {
+                    params.put("withWasabi", "yes");
+                }else{
+                    params.put("withWasabi", "no");
+                }
                 return params;
             }
         };
@@ -1096,7 +1179,71 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void recursiveWaitForTurno(){
+        if(activityRunning) {
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
 
+                    StringRequest stringRequest = null;
+                    stringRequest = new StringRequest(Request.Method.POST, url + "/waitturno",
+                            new Response.Listener<String>() {
+                                @Override
+                                public void onResponse(String response) {
+                                    try {
+                                        JSONObject datajson = new JSONObject(response);
+                                        JSONArray playersFin = datajson.getJSONArray("playersFin");
+                                        for(int i = 0; i < playersFin.length(); i++){
+                                            int playerRel = getRelativePlayerNum(playersFin.getInt(i));
+                                            if(playerRel == 1){
+                                                continue;
+                                            }
+                                            if(!mapHasPlayed.get(playerRel)){
+                                                mapHasPlayed.put(playerRel, true);
+                                                mapManos.get(playerRel).get(0).setClase(0);
+                                                addCardToTablero(playerRel, mapManos.get(playerRel).get(0));
+                                                mapManos.get(playerRel).remove(0);
+
+                                                drawTableroPlayer(playerRel);
+                                                findViewById(getIdView("timer" + mapPos.get(numPlayers).get(playerRel))).setVisibility(View.INVISIBLE);
+                                            }
+                                        }
+                                        if (datajson.getString("endTurn").equals("yes")) {
+                                            handler.postDelayed(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    nextTurn();
+                                                }
+                                            }, duration);
+
+                                        } else {
+                                            recursiveWaitForTurno(); //volvemos a intentarlo dentro de durationRecursive
+                                        }
+                                    } catch (JSONException e) {
+                                        showErrorMessage("Error en el JSON, recursiveWaitForTurno()\n" + e.getMessage());
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }, new Response.ErrorListener() {
+
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            showErrorMessage(error.toString());
+                        }
+                    }) {
+                        @Override
+                        protected Map<String, String> getParams() throws AuthFailureError {
+                            Map<String, String> params = new HashMap<String, String>();
+                            params.put("username", username);
+                            params.put("sala", String.valueOf(sala));
+                            params.put("idgame", idGame);
+                            params.put("turno", String.valueOf(turno));
+                            return params;
+                        }
+                    };
+                    queue.add(stringRequest);
+                }
+            }, durationRecursive);
+        }
     }
 
     public void startTimer(String pos, boolean isVisible){
@@ -1118,5 +1265,93 @@ public class GameActivity extends AppCompatActivity {
 
     public int getIdView(String name){
         return getResources().getIdentifier(name, "id", getPackageName());
+    }
+
+    public void nextTurn(){
+        StringRequest stringRequest = null;
+        stringRequest = new StringRequest(Request.Method.POST, url + "/nextturno",
+                new Response.Listener<String>(){
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject datajson = new JSONObject(response);
+                            turno = datajson.getInt("turno");
+                            JSONArray infoPlayers = datajson.getJSONArray("infoPlayers");
+                            for(int i = 0; i < infoPlayers.length(); i++){
+                                JSONObject info = infoPlayers.getJSONObject(i);
+                                int player = info.getInt("player");
+                                int relativePlayer = getRelativePlayerNum(player);
+                                int cardPlayed = info.getInt("cardPlayed");
+                                String withWasabiString = info.getString("withWasabi");
+                                boolean withWasabi = withWasabiString.equals("yes");
+                                JSONArray tablero = info.getJSONArray("tablero");
+                                descubrirCarta(relativePlayer, cardPlayed, withWasabi);
+                            }
+                            JSONArray cartasjson = datajson.getJSONArray("cartas");
+                            final ArrayList<Card> cartasPlayer = JSONCardsToList(cartasjson);
+                            for(Card c : cartasPlayer){
+                                c.setFlip(true);
+                            }
+
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    for(int i = 1; i <= numPlayers; i++){
+                                        startTimer(mapPos.get(numPlayers).get(i), i == 1);
+                                        mapHasPlayed.put(i, false);
+                                    }
+                                    hasAlreadyPlayed = false;
+                                    moveManos(cartasPlayer);
+                                    recursiveWaitForTurno();
+                                }
+                            }, duration);
+                        } catch (JSONException e) {
+                            showErrorMessage("Error en el JSON, nextTurn()\n" + e.getStackTrace());
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener(){
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                showErrorMessage(error.toString());
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("username", username);
+                params.put("sala", String.valueOf(sala));
+                params.put("idgame", idGame);
+                params.put("turno", String.valueOf(turno));
+                return params;
+            }
+        };
+        queue.add(stringRequest);
+    }
+
+    public void descubrirCarta(int player, int cardPlayedId, boolean withWasabi) {
+        Card card = new Card(cardPlayedId, null, true, false);
+
+        ArrayList<ArrayList<Card>> tablero = mapTablero.get(player);
+        HashMap<Integer, Integer> slotsTablero = mapSlotsTablero.get(player);
+        if (slotsTablero.containsKey(0)) {
+            ArrayList<Card> pila = tablero.get(slotsTablero.get(0));
+            card = pila.get(0);
+            card.setId(cardPlayedId);
+            card.genTipoYNombre();
+            int index = slotsTablero.get(0);
+            mapTablero.get(player).remove(index);
+            mapSlotsTablero.get(player).remove(0);
+        } else {
+            ImageView slot = findViewById(getIdView("tablero" + mapPos.get(numPlayers).get(player)));
+            genCardImage(card, slot);
+        }
+        if (withWasabi) {
+            addNigiriConWasabi(player, card);
+        } else {
+            addCardToTablero(player, card);
+        }
+        drawTableroPlayer(player);
     }
 }

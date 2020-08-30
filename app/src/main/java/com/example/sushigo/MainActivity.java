@@ -115,4 +115,9 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("sala", Integer.parseInt(salaBox.getText().toString()));
         startActivity(intent);
     }
+
+    public void openAjustes(View view){
+        Intent intent = new Intent(this, AjustesActivity.class);
+        startActivity(intent);
+    }
 }

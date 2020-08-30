@@ -104,7 +104,14 @@ public class Card {
     }
 
     public void genTipoYNombre(){
-        if(id <= 14){
+        if(id == 0){
+            this.tipo = 0;
+            this.clase = 0;
+            this.nombre = "Desconocido";
+            this.imageId = R.drawable.sushi_go_template;
+            this.imageFoodId = R.drawable.sushi_food_maki1;
+            this.color = "#FFFFFF";
+        }else if(id >= 1 && id <= 14){
             this.tipo = 1;
             this.clase = 1;
             this.nombre = "Tempura";
@@ -189,8 +196,8 @@ public class Card {
             this.imageFoodId = R.drawable.sushi_food_palillos;
             this.color = "#94cab9";
         }else{
-            this.tipo = 0;
-            this.clase = 0;
+            this.tipo = -1;
+            this.clase = -1;
             this.nombre = "Error";
             this.imageId = R.drawable.sushi_go_template;
             this.imageFoodId = R.drawable.sushi_food_maki1;

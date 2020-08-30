@@ -31,7 +31,7 @@ public class SalaEsperaActivity extends AppCompatActivity {
 
     Handler handler = new Handler();
 
-    String url = "http://82.158.149.91:3000";
+    String url = "https://sushigo-backend-jaime.herokuapp.com";
 
     int duration = 1000;
 
@@ -46,6 +46,11 @@ public class SalaEsperaActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sala_espera);
+        url = getApplicationContext().getSharedPreferences("preferences", MODE_PRIVATE).getString("url", "https://sushigo-backend-jaime.herokuapp.com");
+        SharedPreferences sp = getApplicationContext().getSharedPreferences("preferences", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString("url", url);
+        editor.apply();
 
         activityRunning = true;
 
