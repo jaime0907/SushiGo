@@ -366,6 +366,7 @@
         android:clipToPadding="false"
         android:orientation="horizontal"
         android:padding="16dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/guideline13"
         app:layout_constraintEnd_toStartOf="@+id/guideline4"
         app:layout_constraintStart_toStartOf="@+id/guideline9"
@@ -436,11 +437,12 @@
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:elevation="3px"
         android:indeterminate="false"
         android:max="30"
         android:progress="30"
         android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@+id/guideline12"
+        app:layout_constraintBottom_toTopOf="@+id/layoutButtons"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -512,5 +514,102 @@
         android:text="Add card"
         app:layout_constraintBottom_toTopOf="@+id/guideline2"
         app:layout_constraintStart_toStartOf="@+id/guideline4" />
+
+    <TextView
+        android:id="@+id/palillosText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="5dp"
+        android:text="Juegue la primera carta"
+        android:textAlignment="center"
+        android:textColor="#FFFFFF"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layoutButtons" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardResultados"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="listoParaRonda"
+        android:visibility="invisible"
+        app:cardBackgroundColor="#D7000000"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="16dp"
+        app:contentPadding="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline11">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <TableLayout
+                android:id="@+id/tablaResultados"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/textView13"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:textAlignment="center"
+                        android:textColor="#FFFFFF" />
+
+                    <TextView
+                        android:id="@+id/textView15"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="user1"
+                        android:textAlignment="center"
+                        android:textColor="#FFFFFF" />
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/textView11"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1º Ronda"
+                        android:textAlignment="center"
+                        android:textColor="#FFFFFF" />
+
+                    <TextView
+                        android:id="@+id/textView12"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="69"
+                        android:textAlignment="center"
+                        android:textColor="#FFFFFF" />
+                </TableRow>
+            </TableLayout>
+
+            <TextView
+                android:id="@+id/textView14"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:text="Toque para continuar"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,6 +6,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -15,9 +16,12 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
@@ -31,6 +35,7 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,6 +57,7 @@ public class GameActivity extends AppCompatActivity {
     int numPlayers = 0;
     int numPlayer = 0;
     int turno = 0;
+    int ronda = 0;
 
     float escalaSel = 1.5f;
 
@@ -64,17 +70,21 @@ public class GameActivity extends AppCompatActivity {
 
     HashMap<Integer, HashMap<Integer, String>> mapPos = new HashMap<>();
 
-    boolean hayPalillos = false;
     boolean hasAlreadyPlayed = false;
+
+    boolean isPrimeraCarta = false;
+    boolean isSegundaCarta = false;
+    Card primeraCarta = null;
+    int nprimeracard = 1;
+    Card palillosCogidos = null;
+    boolean withWasabiPrimera = false;
 
     int countdownDuration = 30;
 
     HashMap<String, CountDownTimer> mapTimer = new HashMap<>();
 
     HashMap<Integer, ArrayList<ArrayList<Card>>> mapTablero = new HashMap<>();
-    HashMap<Integer, HashMap<Integer, Integer>> mapSlotsTablero = new HashMap<>();
     HashMap<Integer, Boolean> mapHasPlayed = new HashMap<>();
-    HashMap<Integer, ArrayList<Integer>> mapWasabisLibres = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -201,18 +211,6 @@ public class GameActivity extends AppCompatActivity {
         mapTablero.put(4, new ArrayList<ArrayList<Card>>());
         mapTablero.put(5, new ArrayList<ArrayList<Card>>());
 
-        mapSlotsTablero.put(1, new HashMap<Integer, Integer>());
-        mapSlotsTablero.put(2, new HashMap<Integer, Integer>());
-        mapSlotsTablero.put(3, new HashMap<Integer, Integer>());
-        mapSlotsTablero.put(4, new HashMap<Integer, Integer>());
-        mapSlotsTablero.put(5, new HashMap<Integer, Integer>());
-
-        mapWasabisLibres.put(1, new ArrayList<Integer>());
-        mapWasabisLibres.put(2, new ArrayList<Integer>());
-        mapWasabisLibres.put(3, new ArrayList<Integer>());
-        mapWasabisLibres.put(4, new ArrayList<Integer>());
-        mapWasabisLibres.put(5, new ArrayList<Integer>());
-
         activityRunning = true;
 
 
@@ -229,6 +227,13 @@ public class GameActivity extends AppCompatActivity {
     protected void onStop() {
         activityRunning = false;
         super.onStop();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        startActivity(intent);
     }
 
     public void startGame(){
@@ -251,6 +256,7 @@ public class GameActivity extends AppCompatActivity {
                             numPlayers = datajson.getInt("numplayers");
                             numPlayer = datajson.getInt("numplayer");
                             turno = datajson.getInt("turno");
+                            ronda = datajson.getInt("ronda");
                             drawPlayers(datajson.getJSONArray("arrayplayers"));
                             mapManos.put(1,JSONCardsToList(datajson.getJSONArray("cartas")));
 
@@ -330,7 +336,7 @@ public class GameActivity extends AppCompatActivity {
         ImageView playerTemplate = findViewById(R.id.manoS);
         ArrayList<Card> listCards = mapManos.get(1);
         for(int i = 0; i < listCards.size(); i++){
-            moveMano(listCards.get(i), playerTemplate, "S", "S", i, listCards.size());
+            moveMano(listCards.get(i), playerTemplate, "S", "S", i, listCards.size(), false);
         }
     }
 
@@ -472,6 +478,8 @@ public class GameActivity extends AppCompatActivity {
 
     public void flipCard(Card card, final int duration, final boolean toN){
         final Card cardCopy = card;
+        final boolean wasFlip = cardCopy.isFlip();
+        cardCopy.setFlip(!cardCopy.isFlip());
         int startRot = 0;
         int endRot = -90;
 
@@ -490,7 +498,7 @@ public class GameActivity extends AppCompatActivity {
                 int startRot = 90;
                 int endRot = 0;
 
-                if(cardCopy.isFlip()){
+                if(wasFlip){
                     startRot = -90;
                     endRot = 0;
                 }
@@ -498,12 +506,12 @@ public class GameActivity extends AppCompatActivity {
                     cardCopy.getImagen().setRotation(0);
                 }
 
-                if(cardCopy.isFlip()){
+                if(wasFlip){
                     cardCopy.getImagen().setImageResource(cardCopy.getImageId());
                 }else{
                     cardCopy.getImagen().setImageResource(R.drawable.sushi_back);
                 }
-                cardCopy.setFlip(!cardCopy.isFlip());
+
 
 
                 ObjectAnimator anim = ObjectAnimator.ofFloat(cardCopy.getImagen(), "rotationY", startRot, endRot);
@@ -640,7 +648,7 @@ public class GameActivity extends AppCompatActivity {
                 if(isReparto){
                     posOri = "S";
                 }
-                moveMano(card, dest, posOri, mapPos.get(numPlayers).get(player), i, listCards.size());
+                moveMano(card, dest, posOri, mapPos.get(numPlayers).get(player), i, listCards.size(), false);
             }
         }
     }
@@ -689,7 +697,7 @@ public class GameActivity extends AppCompatActivity {
         return 0;
     }
 
-    public void moveMano(Card cardOrigen, ImageView destino, String posOri, String posDest, int ncard, int totalcards){
+    public void moveMano(Card cardOrigen, ImageView destino, String posOri, String posDest, int ncard, int totalcards, boolean isPalillos){
         ImageView origen = cardOrigen.getImagen();
         ImageView newCardImage = new ImageView(getApplicationContext());
         if(cardOrigen.isFlip()){
@@ -702,7 +710,12 @@ public class GameActivity extends AppCompatActivity {
 
         newCardImage.setScaleX(scaleCard(posOri, posDest));
         newCardImage.setScaleY(scaleCard(posOri, posDest));
-        newCardImage.setRotation(rotateCard(posOri));
+        if(isPalillos){
+            newCardImage.setRotation(0);
+        }else{
+            newCardImage.setRotation(rotateCard(posOri));
+        }
+
         float rotacion = 0;
         float escala = 1;
 
@@ -727,7 +740,11 @@ public class GameActivity extends AppCompatActivity {
             case "N":
             case "N1":
             case "N2":
-                rotacion = -180;
+                if(!isPalillos) {
+                    rotacion = -180;
+                }else{
+                    rotacion = 0;
+                }
                 escala = 1f;
                 x = destino.getWidth()*(ncard-((totalcards-1)/2f))*0.1f;
                 break;
@@ -781,6 +798,9 @@ public class GameActivity extends AppCompatActivity {
                 }else{
                     return ncards < 1;
             }
+            case 8:
+            case 0:
+                return ncards < 1;
             default:
                 return ncards < 4;
 
@@ -788,41 +808,33 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void addNigiriConWasabi(int player, Card card){
-        if(mapWasabisLibres.get(player).size() > 0){
-            mapTablero.get(player).get(mapWasabisLibres.get(player).get(0)).add(card);
-            mapWasabisLibres.get(player).remove(0);
+        if(hayWasabiLibre(player)){
+            mapTablero.get(player).get(findWasabiLibre(player)).add(card);
         }else{
             showErrorMessage("No hay wasabis libres");
         }
     }
 
     public void addCardToTablero(int player, Card card){
-        String pos = mapPos.get(numPlayers).get(player);
-        ArrayList<ArrayList<Card>> tablero = mapTablero.get(player);
-        HashMap<Integer, Integer> slotsTablero = mapSlotsTablero.get(player);
-        if(slotsTablero.containsKey(card.getClase())){
-            ArrayList<Card> pila = tablero.get(slotsTablero.get(card.getClase()));
+        if(findSlotTablero(player, card.getClase(), false) >= 0){
+            Log.d("addCardToTablero", "card: " + card.getId() + ", clase: " + card.getClase() + " tablero: " + mapTablero.get(player).toString());
+            ArrayList<Card> pila = mapTablero.get(player).get(findSlotTablero(player, card.getClase(), true));
             if(pilaNotFull(pila, card.getClase(), false)){
                 pila.add(card);
             }else{
                 ArrayList<Card> newLista = new ArrayList<Card>();
                 newLista.add(card);
-                tablero.add(newLista);
-                slotsTablero.put(card.getClase(), tablero.size()-1);
+                mapTablero.get(player).add(newLista);
             }
         }else{
             ArrayList<Card> newLista = new ArrayList<Card>();
             newLista.add(card);
-            tablero.add(newLista);
-            slotsTablero.put(card.getClase(), tablero.size()-1);
-        }
-        if(card.getClase() == 7){
-            mapWasabisLibres.get(player).add(tablero.size()-1);
+            mapTablero.get(player).add(newLista);
         }
     }
 
     public void drawTableroPlayer(int player){
-        Log.d("drawTableroPlayer()", "yes");
+        Log.d("drawTableroPlayer()", "player: " + player);
         ArrayList<ArrayList<Card>> listaPilas = mapTablero.get(player);
         String posDest = mapPos.get(numPlayers).get(player);
         ImageView destino = findViewById(getIdView("tablero" + posDest));
@@ -923,6 +935,7 @@ public class GameActivity extends AppCompatActivity {
                     newCardImage.setLayoutParams(lp);
                     newCardImage.setX(xcard);
                     newCardImage.setY(ycard);
+                    newCardImage.setElevation(j);
                     ((ConstraintLayout) findViewById(R.id.game_layout)).addView(newCardImage);
                     card.setImagen(newCardImage);
                 }
@@ -933,10 +946,12 @@ public class GameActivity extends AppCompatActivity {
                 if(card.getClase() == 0){
                     withFlip = false;
                 }
-                //Log.d("i", String.valueOf(i));
-                //Log.d("j", String.valueOf(j));
-                //Log.d("withFlip", String.valueOf(withFlip));
-                //Log.d("card", String.valueOf(card.getId()));
+                Log.d("i", String.valueOf(i));
+                Log.d("j", String.valueOf(j));
+                Log.d("card.isFlip", String.valueOf(card.isFlip()));
+                Log.d("card.clase", String.valueOf(card.getClase()));
+                Log.d("card", String.valueOf(card.getId()));
+                Log.d("next", "---------------------");
                 moveCard(card, xcard, ycard, withFlip, duration, toN, player != 1);
 
                 if (posDest.equals("S")) {
@@ -1001,53 +1016,66 @@ public class GameActivity extends AppCompatActivity {
                     animSetXY.start();
                 }
             }
-            makeButtons(selCard, noButtons);
+            if(noButtons){
+                makeButtons(null);
+            }else{
+                makeButtons(selCard);
+            }
+
         }
     }
 
-    public boolean hayWasabiLibre(){
-        return mapWasabisLibres.get(1).size() > 0;
+    public boolean hayWasabiLibre(int player){
+        return findWasabiLibre(player) >= 0;
     }
 
-    public void makeButtons(final Card selCard, boolean noButtons){
+    public void makeButtons(final Card selCard){
         clearButtons();
-        if(!noButtons) {
-            if (hayPalillos) {
-                //something
-            } else {
-                switch (selCard.getTipo()) {
-                    case 7:
-                    case 8:
-                    case 9:
-                        if (hayWasabiLibre()) {
-                            CardView conWasabiCard = newButton("Jugar con Wasabi", selCard.getImageFoodId(), selCard.getColor(), false);
-                            conWasabiCard.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    playCard(selCard, true);
-                                }
-                            });
-                            CardView sinWasabiCard = newButton("Jugar sin Wasabi", selCard.getImageFoodId(), selCard.getColor(), false);
-                            sinWasabiCard.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    playCard(selCard, false);
-                                }
-                            });
-                            break;
-                        }
-                    default:
-                        String texto = "Jugar " + selCard.getNombre();
-                        int idImagen = selCard.getImageFoodId(); //Cambiar cuando estén todos los renders
-                        CardView playCard = newButton(texto, idImagen, selCard.getColor(), true);
-                        playCard.setOnClickListener(new View.OnClickListener() {
+        if (findSlotTablero(1, 8, false) >= 0 && mapManos.get(1).size() > 1 && !isPrimeraCarta && !isSegundaCarta) { //hay palillos, hay al menos 2 cartas en la mano y no has jugado ya los palillos.
+            String texto = "Coger Palillos";
+            int idImagen = R.drawable.sushi_food_palillos;
+            CardView playCard = newButton(texto, idImagen, "#94cab9", selCard == null);
+            playCard.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    cogerPalillosButton(v);
+                }
+            });
+        }
+        if(selCard != null){
+            Log.d("makeButtons", "selCard: " + selCard.toString() + ", mano: " + listString(mapManos.get(1)) + ", hayWasabiLibre: " + hayWasabiLibre(1));
+            switch (selCard.getTipo()) {
+                case 7:
+                case 8:
+                case 9:
+                    if (hayWasabiLibre(1)) {
+                        CardView conWasabiCard = newButton("Jugar con Wasabi", selCard.getImageFoodId(), selCard.getColor(), false);
+                        conWasabiCard.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                playCard(selCard, true);
+                            }
+                        });
+                        CardView sinWasabiCard = newButton("Jugar sin Wasabi", selCard.getImageFoodId(), selCard.getColor(), false);
+                        sinWasabiCard.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 playCard(selCard, false);
                             }
                         });
                         break;
-                }
+                    }
+                default:
+                    String texto = "Jugar " + selCard.getNombre();
+                    int idImagen = selCard.getImageFoodId();
+                    CardView playCard = newButton(texto, idImagen, selCard.getColor(), true);
+                    playCard.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            playCard(selCard, false);
+                        }
+                    });
+                    break;
             }
         }
     }
@@ -1117,6 +1145,30 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public void playCard(final Card card, final boolean withWasabi){
+        if(isPrimeraCarta){
+            primeraCarta = card;
+            nprimeracard = mapManos.get(1).indexOf(card);
+            card.setClase(0);
+            card.setSelected(false);
+            card.getImagen().setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+            addCardToTablero(1, card);
+            mapManos.get(1).remove(mapManos.get(1).indexOf(card));
+            clearButtons();
+            TextView palillosText = findViewById(R.id.palillosText);
+            palillosText.setText("Juegue la segunda carta");
+            palillosText.setVisibility(View.VISIBLE);
+            isPrimeraCarta = false;
+            isSegundaCarta = true;
+            if(withWasabi){
+                withWasabiPrimera = true;
+            }
+            return;
+        }
         hasAlreadyPlayed = true;
 
         StringRequest stringRequest = null;
@@ -1128,6 +1180,15 @@ public class GameActivity extends AppCompatActivity {
                             JSONObject datajson = new JSONObject(response);
                             String status = datajson.getString("status");
                             if(status.equals("ok")){
+                                if(isSegundaCarta){
+                                    regenCardPlayerForTablero(primeraCarta);
+                                    flipCard(primeraCarta, duration, false);
+                                    isSegundaCarta = false;
+                                    withWasabiPrimera = false;
+                                    moverPalillos(1, nprimeracard);
+                                    TextView palillosText = findViewById(R.id.palillosText);
+                                    palillosText.setVisibility(View.INVISIBLE);
+                                }
                                 card.setClase(0);
                                 regenCardPlayerForTablero(card);
                                 addCardToTablero(1, card);
@@ -1165,12 +1226,31 @@ public class GameActivity extends AppCompatActivity {
                 params.put("username", username);
                 params.put("sala", String.valueOf(sala));
                 params.put("idgame", idGame);
-                params.put("card", String.valueOf(card.getId()));
-                params.put("turno", String.valueOf(turno));
-                if(withWasabi) {
-                    params.put("withWasabi", "yes");
+                if(isSegundaCarta){
+                    params.put("card", String.valueOf(primeraCarta.getId()));
+                    params.put("turno", String.valueOf(turno));
+                    if(withWasabiPrimera) {
+                        params.put("withWasabi", "yes");
+                    }else{
+                        params.put("withWasabi", "no");
+                    }
+                    params.put("withPalillos", "yes");
+                    params.put("palillos", String.valueOf(palillosCogidos.getId()));
+                    params.put("segundacarta", String.valueOf(card.getId()));
+                    if(withWasabi){
+                        params.put("withWasabiSegunda", "yes");
+                    }else{
+                        params.put("withWasabiSegunda", "no");
+                    }
                 }else{
-                    params.put("withWasabi", "no");
+                    params.put("card", String.valueOf(card.getId()));
+                    params.put("turno", String.valueOf(turno));
+                    if(withWasabi) {
+                        params.put("withWasabi", "yes");
+                    }else{
+                        params.put("withWasabi", "no");
+                    }
+                    params.put("withPalillos", "no");
                 }
                 return params;
             }
@@ -1193,11 +1273,23 @@ public class GameActivity extends AppCompatActivity {
                                         JSONObject datajson = new JSONObject(response);
                                         JSONArray playersFin = datajson.getJSONArray("playersFin");
                                         for(int i = 0; i < playersFin.length(); i++){
-                                            int playerRel = getRelativePlayerNum(playersFin.getInt(i));
+                                            JSONObject infoplayer = playersFin.getJSONObject(i);
+                                            int withPalillosInt = infoplayer.getInt("withPalillos");
+                                            boolean withPalillos = withPalillosInt == 1;
+
+                                            int playerRel = getRelativePlayerNum(infoplayer.getInt("numPlayer"));
                                             if(playerRel == 1){
                                                 continue;
                                             }
                                             if(!mapHasPlayed.get(playerRel)){
+                                                if(withPalillos){
+                                                    moverPalillos(playerRel, 0);
+                                                    //meto carta adicional
+                                                    mapHasPlayed.put(playerRel, true);
+                                                    mapManos.get(playerRel).get(0).setClase(0);
+                                                    addCardToTablero(playerRel, mapManos.get(playerRel).get(0));
+                                                    mapManos.get(playerRel).remove(0);
+                                                }
                                                 mapHasPlayed.put(playerRel, true);
                                                 mapManos.get(playerRel).get(0).setClase(0);
                                                 addCardToTablero(playerRel, mapManos.get(playerRel).get(0));
@@ -1258,6 +1350,7 @@ public class GameActivity extends AppCompatActivity {
         pb.setProgress(countdownDuration);
         mapTimer.get(pos).start();
     }
+
     public void stopTimer(String pos){
         findViewById(getIdView("timer" + pos)).setVisibility(View.INVISIBLE);
         mapTimer.get(pos).cancel();
@@ -1281,28 +1374,53 @@ public class GameActivity extends AppCompatActivity {
                                 JSONObject info = infoPlayers.getJSONObject(i);
                                 int player = info.getInt("player");
                                 int relativePlayer = getRelativePlayerNum(player);
-                                int cardPlayed = info.getInt("cardPlayed");
-                                String withWasabiString = info.getString("withWasabi");
-                                boolean withWasabi = withWasabiString.equals("yes");
+                                int cardPlayedId = info.getInt("cardPlayed");
+                                int withWasabiInt = info.getInt("withWasabi");
+                                boolean withWasabi = withWasabiInt == 1;
                                 JSONArray tablero = info.getJSONArray("tablero");
-                                descubrirCarta(relativePlayer, cardPlayed, withWasabi);
+                                int withPalillosInt = info.getInt("withPalillos");
+
+                                if(withPalillosInt == 1){
+                                    //cojo el resto de info
+                                    int segundacartaId = info.getInt("segundacarta");
+                                    int withWasabiSegundaInt = info.getInt("withWasabiSegunda");
+                                    //descubro ambas cartas
+                                    descubrirCartasPalillos(relativePlayer, cardPlayedId, withWasabi, segundacartaId, withWasabiSegundaInt == 1);
+                                }else{
+                                    descubrirCarta(relativePlayer, cardPlayedId, withWasabi);
+                                }
+
+                                
                             }
                             JSONArray cartasjson = datajson.getJSONArray("cartas");
                             final ArrayList<Card> cartasPlayer = JSONCardsToList(cartasjson);
                             for(Card c : cartasPlayer){
                                 c.setFlip(true);
                             }
+                            String endRondaStr = datajson.getString("endRonda");
+                            final boolean endRonda = endRondaStr.equals("yes");
+
 
                             handler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    for(int i = 1; i <= numPlayers; i++){
-                                        startTimer(mapPos.get(numPlayers).get(i), i == 1);
-                                        mapHasPlayed.put(i, false);
+                                    if(endRonda){
+                                        resultsRonda();
+                                    }else {
+                                        moveManos(cartasPlayer);
+                                        handler.postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                for (int i = 1; i <= numPlayers; i++) {
+                                                    startTimer(mapPos.get(numPlayers).get(i), i == 1);
+                                                    mapHasPlayed.put(i, false);
+                                                }
+                                                hasAlreadyPlayed = false;
+                                                makeButtons(null);
+                                                recursiveWaitForTurno();
+                                            }
+                                        }, duration);
                                     }
-                                    hasAlreadyPlayed = false;
-                                    moveManos(cartasPlayer);
-                                    recursiveWaitForTurno();
                                 }
                             }, duration);
                         } catch (JSONException e) {
@@ -1332,26 +1450,240 @@ public class GameActivity extends AppCompatActivity {
 
     public void descubrirCarta(int player, int cardPlayedId, boolean withWasabi) {
         Card card = new Card(cardPlayedId, null, true, false);
+        int index = findSlotTablero(player, 0, true);
 
         ArrayList<ArrayList<Card>> tablero = mapTablero.get(player);
-        HashMap<Integer, Integer> slotsTablero = mapSlotsTablero.get(player);
-        if (slotsTablero.containsKey(0)) {
-            ArrayList<Card> pila = tablero.get(slotsTablero.get(0));
+        if (index >= 0) {
+            ArrayList<Card> pila = tablero.get(index);
             card = pila.get(0);
             card.setId(cardPlayedId);
             card.genTipoYNombre();
-            int index = slotsTablero.get(0);
             mapTablero.get(player).remove(index);
-            mapSlotsTablero.get(player).remove(0);
         } else {
             ImageView slot = findViewById(getIdView("tablero" + mapPos.get(numPlayers).get(player)));
             genCardImage(card, slot);
         }
+        Log.e("descubrirCarta()", "player: " + player + ", card: " + cardPlayedId + ", withWasabi: " + withWasabi + ", hayWasabiLibre: " + hayWasabiLibre(player));
         if (withWasabi) {
             addNigiriConWasabi(player, card);
         } else {
             addCardToTablero(player, card);
         }
         drawTableroPlayer(player);
+    }
+
+    public void descubrirCartasPalillos(int player, int primeraCartaId, boolean withWasabiPrimera, int segundaCartaId, boolean withWasabiSegunda){
+        Card card1 = new Card(primeraCartaId, null, true, false);
+        Card card2 = new Card(segundaCartaId, null, true, false);
+
+        //convierto y borro la primera carta tapada
+        int index = findSlotTablero(player, 0, false);
+        ArrayList<ArrayList<Card>> tablero = mapTablero.get(player);
+        if (index >= 0) {
+            ArrayList<Card> pila = tablero.get(index);
+            card1 = pila.get(0);
+            card1.setId(primeraCartaId);
+            card1.genTipoYNombre();
+            mapTablero.get(player).remove(index);
+        } else {
+            ImageView slot = findViewById(getIdView("tablero" + mapPos.get(numPlayers).get(player)));
+            genCardImage(card1, slot);
+        }
+        //convierto y borro la segunda carta tapada
+        index = findSlotTablero(player, 0, false);
+        tablero = mapTablero.get(player);
+        if (index >= 0) {
+            ArrayList<Card> pila = tablero.get(index);
+            card2 = pila.get(0);
+            card2.setId(segundaCartaId);
+            card2.genTipoYNombre();
+            mapTablero.get(player).remove(index);
+        } else {
+            ImageView slot = findViewById(getIdView("tablero" + mapPos.get(numPlayers).get(player)));
+            genCardImage(card2, slot);
+        }
+
+
+        Log.e("descubrirCartas(part1)", "player: " + player + ", card1: " + primeraCartaId + ", withWasabi1: " + withWasabiPrimera + ", hayWasabiLibre: " + hayWasabiLibre(player));
+        if (withWasabiPrimera) {
+            addNigiriConWasabi(player, card1);
+        } else {
+            addCardToTablero(player, card1);
+        }
+
+        Log.e("descubrirCartas(part1)", "player: " + player + ", card2: " + segundaCartaId + ", withWasabi2: " + withWasabiSegunda + ", hayWasabiLibre: " + hayWasabiLibre(player));
+        if(withWasabiSegunda){
+            addNigiriConWasabi(player, card2);
+        } else {
+            addCardToTablero(player, card2);
+        }
+        drawTableroPlayer(player);
+    }
+
+    public void cogerPalillosButton(View view){
+        if(findSlotTablero(1, 8, false) >= 0) {
+            isPrimeraCarta = true;
+            TextView palillosText = findViewById(R.id.palillosText);
+            palillosText.setText("Juegue la primera carta");
+            palillosText.setVisibility(View.VISIBLE);
+            palillosCogidos = mapTablero.get(1).get(findSlotTablero(1, 8, false)).get(0);
+            deselectCards();
+        }else{
+            showErrorMessage("No hay palillos que coger");
+        }
+    }
+
+    public void moverPalillos(int player, int ncard){
+        int index = findSlotTablero(player, 8, false);
+        Card palillos = mapTablero.get(player).get(index).get(0);
+        palillos.setSelected(false);
+        mapManos.get(player).add(palillos);
+        mapTablero.get(player).remove(index);
+        ImageView destino = findViewById(getIdView("mano" + mapPos.get(numPlayers).get(player)));
+        String pos = mapPos.get(numPlayers).get(player);
+        String posOri = pos;
+        boolean isPalillos = false;
+        if(player == 1){
+            posOri = "N";
+            isPalillos = true;
+        }
+        moveMano(palillos, destino, posOri, pos, ncard, mapManos.get(1).size(), isPalillos);
+        if(player != 1){
+            flipCard(palillos, duration, false);
+        }
+    }
+
+    public int findSlotTablero(int player, int clase, boolean reverse){
+        if(!reverse) {
+            for (int i = 0; i < mapTablero.get(player).size(); i++) {
+                if (mapTablero.get(player).get(i).get(0).getClase() == clase) {
+                    return i;
+                }
+            }
+        }else{
+            for (int i = mapTablero.get(player).size() - 1; i >= 0; i--) {
+                if (mapTablero.get(player).get(i).get(0).getClase() == clase) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    public int findWasabiLibre(int player){
+        for (int i = 0; i < mapTablero.get(player).size(); i++) {
+            if (mapTablero.get(player).get(i).get(0).getTipo() == 11 && mapTablero.get(player).get(i).size() == 1) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public void deselectCards(){
+        for(int i = 0; i < mapManos.get(1).size(); i++){
+            Card card = mapManos.get(1).get(i);
+            if(card.isSelected()){
+                selectCard(card.getImagen());
+                return;
+            }
+        }
+    }
+
+    public String listString(ArrayList<Card> list){
+        String a = "[";
+        for(Card card : list){
+            a += card.toString() + ", ";
+        }
+        a += "]";
+        return a;
+    }
+
+    public void resultsRonda() {
+        StringRequest stringRequest = null;
+        stringRequest = new StringRequest(Request.Method.POST, url + "/resultsronda",
+                new Response.Listener<String>(){
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject datajson = new JSONObject(response);
+                            JSONArray infoPlayers = datajson.getJSONArray("infoPlayers");
+                            findViewById(R.id.cardResultados).setVisibility(View.VISIBLE);
+                            TableLayout tablaResultados = findViewById(R.id.tablaResultados);
+
+                            TableLayout.LayoutParams lpMatch = new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                            TableRow.LayoutParams lpWrap = new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+
+                            TableRow rowUsernames = new TableRow(getApplicationContext());
+                            rowUsernames.setLayoutParams(lpMatch);
+
+                            addTextToRow("", rowUsernames);
+
+                            TableRow row1 = new TableRow(getApplicationContext());
+                            row1.setLayoutParams(lpMatch);
+
+                            addTextToRow("1º Ronda", row1);
+
+                            TableRow row2 = new TableRow(getApplicationContext());
+                            row2.setLayoutParams(lpMatch);
+                            TableRow row3 = new TableRow(getApplicationContext());
+                            row3.setLayoutParams(lpMatch);
+
+                            for(int i = 0; i < infoPlayers.length(); i++){
+                                JSONObject info = infoPlayers.getJSONObject(i);
+
+                                int player = info.getInt("player");
+                                int puntos = info.getInt("puntos");
+                                String username = info.getString("username");
+
+                                addTextToRow(username, rowUsernames);
+
+                                addTextToRow(String.valueOf(puntos), row1);
+
+                            }
+                            tablaResultados.removeAllViews();
+                            tablaResultados.addView(rowUsernames);
+                            tablaResultados.addView(row1);
+                            tablaResultados.addView(row2);
+                            tablaResultados.addView(row3);
+
+                        } catch (JSONException e) {
+                            showErrorMessage("Error en el JSON, resultsRonda()\n" + e.getStackTrace());
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener(){
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                showErrorMessage(error.toString());
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("username", username);
+                params.put("sala", String.valueOf(sala));
+                params.put("idgame", idGame);
+                params.put("turno", String.valueOf(turno));
+                params.put("ronda", String.valueOf(ronda));
+                return params;
+            }
+        };
+        queue.add(stringRequest);
+    }
+
+    public void addTextToRow(String text, TableRow row){
+        TextView newText = new TextView(getApplicationContext());
+        newText.setText(text);
+        newText.setLayoutParams(new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        newText.setPadding(dptopx(8),dptopx(8),dptopx(8),dptopx(8));
+        newText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        newText.setTextColor(Color.parseColor("#FFFFFF"));
+        row.addView(newText);
+    }
+
+    public void listoParaRonda(View view){
+
     }
 }

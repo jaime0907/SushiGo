@@ -2,6 +2,8 @@ package com.example.sushigo;
 
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+
 
 public class Card {
     private int id;
@@ -203,5 +205,11 @@ public class Card {
             this.imageFoodId = R.drawable.sushi_food_maki1;
             this.color = "#FFFFFF";
         }
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return nombre + " (" + id + ")";
     }
 }
