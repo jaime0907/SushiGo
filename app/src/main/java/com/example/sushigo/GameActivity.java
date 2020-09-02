@@ -20,6 +20,7 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -85,6 +86,10 @@ public class GameActivity extends AppCompatActivity {
 
     HashMap<Integer, ArrayList<ArrayList<Card>>> mapTablero = new HashMap<>();
     HashMap<Integer, Boolean> mapHasPlayed = new HashMap<>();
+    HashMap<Integer, Boolean> mapIsReady = new HashMap<>();
+    HashMap<Integer, TextView> mapTextUsernames = new HashMap<>();
+
+    boolean isReadyForNextRonda = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,12 +124,6 @@ public class GameActivity extends AppCompatActivity {
         mapPos.put(3, mapPos3);
         mapPos.put(4, mapPos4);
         mapPos.put(5, mapPos5);
-
-        mapManos.put(1, new ArrayList<Card>());
-        mapManos.put(2, new ArrayList<Card>());
-        mapManos.put(3, new ArrayList<Card>());
-        mapManos.put(4, new ArrayList<Card>());
-        mapManos.put(5, new ArrayList<Card>());
 
         mapTimer.put("N", new CountDownTimer(countdownDuration*1000, 1000) {
 
@@ -204,6 +203,12 @@ public class GameActivity extends AppCompatActivity {
 
             }
         });
+
+        mapManos.put(1, new ArrayList<Card>());
+        mapManos.put(2, new ArrayList<Card>());
+        mapManos.put(3, new ArrayList<Card>());
+        mapManos.put(4, new ArrayList<Card>());
+        mapManos.put(5, new ArrayList<Card>());
 
         mapTablero.put(1, new ArrayList<ArrayList<Card>>());
         mapTablero.put(2, new ArrayList<ArrayList<Card>>());
@@ -1026,6 +1031,15 @@ public class GameActivity extends AppCompatActivity {
     }
 
     public boolean hayWasabiLibre(int player){
+        if(isSegundaCarta && withWasabiPrimera){
+            int wasabis = 0;
+            for(int i = 0; i < mapTablero.get(player).size(); i++){
+                if(mapTablero.get(player).get(i).get(0).getTipo() == 11){
+                    wasabis++;
+                }
+            }
+            return wasabis >= 2;
+        }
         return findWasabiLibre(player) >= 0;
     }
 
@@ -1049,7 +1063,19 @@ public class GameActivity extends AppCompatActivity {
                 case 8:
                 case 9:
                     if (hayWasabiLibre(1)) {
-                        CardView conWasabiCard = newButton("Jugar con Wasabi", selCard.getImageFoodId(), selCard.getColor(), false);
+                        int conWasabiId = R.drawable.sushi_food_wasabi;
+                        switch(selCard.getTipo()){
+                            case 7:
+                                conWasabiId = R.drawable.sushi_food_nigiri1_wasabi;
+                                break;
+                            case 8:
+                                conWasabiId = R.drawable.sushi_food_nigiri2_wasabi;
+                                break;
+                            case 9:
+                                conWasabiId = R.drawable.sushi_food_nigiri3_wasabi;
+                                break;
+                        }
+                        CardView conWasabiCard = newButton("Jugar con Wasabi", conWasabiId, selCard.getColor(), false);
                         conWasabiCard.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -1226,9 +1252,10 @@ public class GameActivity extends AppCompatActivity {
                 params.put("username", username);
                 params.put("sala", String.valueOf(sala));
                 params.put("idgame", idGame);
+                params.put("turno", String.valueOf(turno));
+                params.put("ronda", String.valueOf(ronda));
                 if(isSegundaCarta){
                     params.put("card", String.valueOf(primeraCarta.getId()));
-                    params.put("turno", String.valueOf(turno));
                     if(withWasabiPrimera) {
                         params.put("withWasabi", "yes");
                     }else{
@@ -1244,7 +1271,7 @@ public class GameActivity extends AppCompatActivity {
                     }
                 }else{
                     params.put("card", String.valueOf(card.getId()));
-                    params.put("turno", String.valueOf(turno));
+
                     if(withWasabi) {
                         params.put("withWasabi", "yes");
                     }else{
@@ -1329,6 +1356,7 @@ public class GameActivity extends AppCompatActivity {
                             params.put("sala", String.valueOf(sala));
                             params.put("idgame", idGame);
                             params.put("turno", String.valueOf(turno));
+                            params.put("ronda", String.valueOf(ronda));
                             return params;
                         }
                     };
@@ -1442,6 +1470,7 @@ public class GameActivity extends AppCompatActivity {
                 params.put("sala", String.valueOf(sala));
                 params.put("idgame", idGame);
                 params.put("turno", String.valueOf(turno));
+                params.put("ronda", String.valueOf(ronda));
                 return params;
             }
         };
@@ -1621,24 +1650,74 @@ public class GameActivity extends AppCompatActivity {
 
                             TableRow row1 = new TableRow(getApplicationContext());
                             row1.setLayoutParams(lpMatch);
-
                             addTextToRow("1º Ronda", row1);
 
                             TableRow row2 = new TableRow(getApplicationContext());
                             row2.setLayoutParams(lpMatch);
+                            addTextToRow("2º Ronda", row2);
+
                             TableRow row3 = new TableRow(getApplicationContext());
                             row3.setLayoutParams(lpMatch);
+                            addTextToRow("3º Ronda", row3);
+
+                            TableRow rowpudin = new TableRow(getApplicationContext());
+                            rowpudin.setLayoutParams(lpMatch);
+                            addTextToRow("Pudin", rowpudin);
+
+                            TableRow rowtotal = new TableRow(getApplicationContext());
+                            rowtotal.setLayoutParams(lpMatch);
+                            addTextToRow("Total", rowtotal);
+
+                            HashMap<Integer, TableRow> mapRows = new HashMap<>();
+                            mapRows.put(1, row1);
+                            mapRows.put(2, row2);
+                            mapRows.put(3, row3);
 
                             for(int i = 0; i < infoPlayers.length(); i++){
                                 JSONObject info = infoPlayers.getJSONObject(i);
 
                                 int player = info.getInt("player");
-                                int puntos = info.getInt("puntos");
+                                JSONArray puntoslist = info.getJSONArray("puntoslist");
                                 String username = info.getString("username");
 
-                                addTextToRow(username, rowUsernames);
+                                TextView usernameText = addTextToRow(username, rowUsernames);
+                                mapTextUsernames.put(player, usernameText);
+                                mapIsReady.put(player, false);
 
-                                addTextToRow(String.valueOf(puntos), row1);
+                                for(int j = 0; j < puntoslist.length(); j++){
+                                    JSONObject obj = puntoslist.getJSONObject(j);
+                                    int puntosRonda = obj.getInt("puntos");
+                                    int rondaPuntos = obj.getInt("ronda");
+
+                                    addTextToRow(String.valueOf(puntosRonda), mapRows.get(rondaPuntos));
+                                }
+
+                                if(ronda == 3){
+                                    int total = info.getInt("totalpuntos");
+                                    addTextToRow(String.valueOf(total), rowtotal);
+
+                                    int pudin = info.getInt("pudinpuntos");
+                                    String pudinString = String.valueOf(pudin);
+                                    if(pudin > 0){
+                                        pudinString = "+" + String.valueOf(pudin);
+                                    }
+                                    addTextToRow(pudinString, rowpudin);
+
+                                    String ganador = info.getString("ganador");
+                                    if(ganador.equals("yes") || ganador.equals("tie")){
+                                        if(ganador.equals("yes")){
+                                            TextView textoFin = findViewById(R.id.textoFin);
+                                            textoFin.setText(username + " ha ganado la partida.");
+                                        }
+                                        if(ganador.equals("tie")){
+                                            TextView textoFin = findViewById(R.id.textoFin);
+                                            textoFin.setText("Ha habido un empate.");
+                                        }
+                                        mapTextUsernames.get(player).setText("\uD83D\uDC51" + username + "\uD83D\uDC51");
+                                    }
+
+                                }
+
 
                             }
                             tablaResultados.removeAllViews();
@@ -1646,6 +1725,14 @@ public class GameActivity extends AppCompatActivity {
                             tablaResultados.addView(row1);
                             tablaResultados.addView(row2);
                             tablaResultados.addView(row3);
+                            if(ronda == 3){
+                                tablaResultados.addView(rowpudin);
+                                tablaResultados.addView(rowtotal);
+                            }
+
+                            if(ronda < 3) {
+                                recursiveWaitForRonda();
+                            }
 
                         } catch (JSONException e) {
                             showErrorMessage("Error en el JSON, resultsRonda()\n" + e.getStackTrace());
@@ -1673,7 +1760,7 @@ public class GameActivity extends AppCompatActivity {
         queue.add(stringRequest);
     }
 
-    public void addTextToRow(String text, TableRow row){
+    public TextView addTextToRow(String text, TableRow row){
         TextView newText = new TextView(getApplicationContext());
         newText.setText(text);
         newText.setLayoutParams(new TableRow.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -1681,9 +1768,175 @@ public class GameActivity extends AppCompatActivity {
         newText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         newText.setTextColor(Color.parseColor("#FFFFFF"));
         row.addView(newText);
+        return newText;
     }
 
     public void listoParaRonda(View view){
+        isReadyForNextRonda = true;
+    }
 
+    public void recursiveWaitForRonda(){
+        StringRequest stringRequest = null;
+        stringRequest = new StringRequest(Request.Method.POST, url + "/waitnextronda",
+                new Response.Listener<String>(){
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject datajson = new JSONObject(response);
+                            JSONArray playersReady = datajson.getJSONArray("playersready");
+
+                            for(int i = 0; i < playersReady.length(); i++){
+                                int player = playersReady.getInt(i);
+                                if(!mapIsReady.get(player)){
+                                    TextView text = mapTextUsernames.get(player);
+                                    text.setText(text.getText() + "✅");
+                                    mapIsReady.put(player, true);
+                                }
+                            }
+
+                            boolean allReady = datajson.getString("allReady").equals("yes");
+                            if(allReady){
+                                handler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        nextRonda();
+                                    }
+                                }, duration);
+                            }else{
+                                if(activityRunning) {
+                                    handler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            recursiveWaitForRonda();
+                                        }
+                                    }, duration);
+                                }
+                            }
+
+                        } catch (JSONException e) {
+                            showErrorMessage("Error en el JSON, recursiveWaitForRonda()\n" + e.getStackTrace());
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener(){
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                showErrorMessage(error.toString());
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("username", username);
+                params.put("sala", String.valueOf(sala));
+                params.put("idgame", idGame);
+                params.put("ronda", String.valueOf(ronda));
+                if(isReadyForNextRonda){
+                    params.put("isReady", "yes");
+                }else{
+                    params.put("isReady", "no");
+                }
+                return params;
+            }
+        };
+        queue.add(stringRequest);
+    }
+
+    public void nextRonda(){
+        StringRequest stringRequest = null;
+        stringRequest = new StringRequest(Request.Method.POST, url + "/nextronda",
+                new Response.Listener<String>(){
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject datajson = new JSONObject(response);
+                            turno = datajson.getInt("turno");
+                            ronda = datajson.getInt("ronda");
+
+                            vaciarTablero();
+                            vaciarManos();
+                            findViewById(R.id.cardResultados).setVisibility(View.INVISIBLE);
+                            hasAlreadyPlayed = false;
+                            isPrimeraCarta = false;
+                            isSegundaCarta = false;
+                            isReadyForNextRonda = false;
+                            clearButtons();
+
+                            mapManos.put(1,JSONCardsToList(datajson.getJSONArray("cartas")));
+
+                            ImageView baraja = findViewById(R.id.baraja);
+                            for(int player = 1; player <= numPlayers; player++){
+                                for(int i = 0; i < mapManos.get(1).size(); i++){
+                                    if(player != 1){
+                                        Card c1 = new Card(0, null, true, false);
+                                        genCardImage(c1, baraja);
+                                        mapManos.get(player).add(c1);
+                                    }else{
+                                        genCardImage(mapManos.get(1).get(i), baraja);
+                                    }
+                                }
+                                startTimer(mapPos.get(numPlayers).get(player), player==1);
+                                mapHasPlayed.put(player, false);
+                            }
+                            redrawManos(true);
+                            recursiveWaitForTurno();
+
+                        } catch (JSONException e) {
+                            showErrorMessage("Error en el JSON, resultsRonda()\n" + e.getStackTrace());
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener(){
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                showErrorMessage(error.toString());
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("username", username);
+                params.put("sala", String.valueOf(sala));
+                params.put("idgame", idGame);
+                params.put("turno", String.valueOf(turno));
+                params.put("ronda", String.valueOf(ronda));
+                return params;
+            }
+        };
+        queue.add(stringRequest);
+    }
+
+    public void vaciarTablero(){
+        ConstraintLayout layout = findViewById(R.id.game_layout);
+        for(int player = 1; player <= numPlayers; player++){
+            for(int i = mapTablero.get(player).size() - 1; i >= 0; i--){
+                for(int j = 0; j < mapTablero.get(player).get(i).size(); j++) {
+                    if(mapTablero.get(player).get(i).get(j).getTipo() != 10) { //Dejar los pudines
+                        layout.removeView(mapTablero.get(player).get(i).get(j).getImagen());
+                    }
+                }
+                if(mapTablero.get(player).get(i).get(0).getTipo() != 10){
+                    mapTablero.get(player).remove(i);
+                }
+            }
+        }
+    }
+
+    public void vaciarManos(){
+        ConstraintLayout layout = findViewById(R.id.game_layout);
+        for(int player = 1; player <= numPlayers; player++){
+            for(int i = 0; i < mapManos.get(player).size(); i++){
+                layout.removeView(mapManos.get(player).get(i).getImagen());
+            }
+        }
+        mapManos = new HashMap<>();
+
+        mapManos.put(1, new ArrayList<Card>());
+        mapManos.put(2, new ArrayList<Card>());
+        mapManos.put(3, new ArrayList<Card>());
+        mapManos.put(4, new ArrayList<Card>());
+        mapManos.put(5, new ArrayList<Card>());
     }
 }

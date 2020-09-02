@@ -233,6 +233,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
+        android:visibility="invisible"
         app:cardBackgroundColor="#8F0000"
         app:cardCornerRadius="8dp"
         app:contentPadding="4dp"
@@ -252,6 +253,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:visibility="invisible"
         app:cardBackgroundColor="#8F0000"
         app:cardCornerRadius="8dp"
         app:contentPadding="4dp"
@@ -271,6 +273,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:visibility="invisible"
         app:cardBackgroundColor="#8F0000"
         app:cardCornerRadius="8dp"
         app:contentPadding="4dp"
@@ -291,6 +294,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:visibility="invisible"
         app:cardBackgroundColor="#8F0000"
         app:cardCornerRadius="8dp"
         app:contentPadding="4dp"
@@ -311,6 +315,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
+        android:visibility="invisible"
         app:cardBackgroundColor="#8F0000"
         app:cardCornerRadius="8dp"
         app:contentPadding="4dp"
@@ -506,15 +511,6 @@
         app:layout_constraintStart_toStartOf="@+id/cardN2"
         app:layout_constraintTop_toBottomOf="@+id/cardN2" />
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="addCardPlayer3"
-        android:text="Add card"
-        app:layout_constraintBottom_toTopOf="@+id/guideline2"
-        app:layout_constraintStart_toStartOf="@+id/guideline4" />
-
     <TextView
         android:id="@+id/palillosText"
         android:layout_width="wrap_content"
@@ -599,7 +595,7 @@
             </TableLayout>
 
             <TextView
-                android:id="@+id/textView14"
+                android:id="@+id/textoFin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingTop="8dp"

@@ -12,12 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".AjustesActivity"></activity>
-        <activity android:name=".SalaEsperaActivity" />
+        <activity
+            android:name=".AjustesActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".SalaEsperaActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".GameActivity"
             android:screenOrientation="sensorLandscape" />
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
